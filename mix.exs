@@ -63,7 +63,8 @@ defmodule JidoRunic.MixProject do
   defp deps do
     [
       # Jido ecosystem
-      {:jido, path: "../jido"},
+      {:jido, path: "../jido", override: true},
+      {:jido_ai, path: "../jido_ai"},
 
       # Runic - DAG workflow composition
       {:runic, github: "zblanco/runic", branch: "zw/runnability-rework"},
@@ -84,7 +85,8 @@ defmodule JidoRunic.MixProject do
       {:git_hooks, "~> 0.8", only: [:dev, :test], runtime: false},
       {:git_ops, "~> 2.9", only: :dev, runtime: false},
       {:stream_data, "~> 1.0", only: [:dev, :test]},
-      {:mimic, "~> 2.0", only: :test}
+      {:mimic, "~> 2.0", only: :test},
+      {:dotenv_parser, "~> 2.0", only: [:dev, :test]}
     ]
   end
 
