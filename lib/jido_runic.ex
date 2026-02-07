@@ -1,18 +1,14 @@
 defmodule JidoRunic do
   @moduledoc """
-  Documentation for `JidoRunic`.
+  Runic workflow integration for the Jido ecosystem.
+
+  ## Overview
+
+  JidoRunic bridges Runic DAG workflow composition with Jido agents,
+  enabling powerful dataflow-driven agent workflows.
+
+  ## Status
+
+  This package is under active development. APIs may change before `1.0`.
   """
-
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> JidoRunic.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
 end
