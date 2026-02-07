@@ -16,10 +16,55 @@ defmodule JidoRunic.Strategy do
   alias Jido.Agent.Directive.Emit
   alias JidoRunic.Directive.ExecuteRunnable
 
+  @action_specs %{
+    :runic_feed_signal => %{
+      schema:
+        Zoi.object(%{
+          data: Zoi.any(),
+          signal: Zoi.any() |> Zoi.optional()
+        }),
+      doc: "Feed a signal into the Runic workflow",
+      name: "runic.feed_signal"
+    },
+    :runic_apply_result => %{
+      schema: Zoi.object(%{runnable: Zoi.any()}),
+      doc: "Apply a completed runnable result to the workflow",
+      name: "runic.apply_result"
+    },
+    :runic_handle_failure => %{
+      schema:
+        Zoi.object(%{
+          runnable_id: Zoi.integer(),
+          reason: Zoi.any()
+        }),
+      doc: "Handle a failed runnable",
+      name: "runic.handle_failure"
+    },
+    :runic_set_workflow => %{
+      schema: Zoi.object(%{workflow: Zoi.any()}),
+      doc: "Set the active workflow",
+      name: "runic.set_workflow"
+    }
+  }
+
+  @impl true
+  def action_spec(action), do: Map.get(@action_specs, action)
+
   @impl true
   def init(agent, ctx) do
     strategy_opts = ctx[:strategy_opts] || []
-    workflow = Keyword.get(strategy_opts, :workflow)
+
+    workflow =
+      case Keyword.get(strategy_opts, :workflow) do
+        nil ->
+          case Keyword.get(strategy_opts, :workflow_fn) do
+            fun when is_function(fun, 0) -> fun.()
+            _ -> nil
+          end
+
+        wf ->
+          wf
+      end
 
     strat_state = StratState.get(agent, nil)
 
@@ -121,6 +166,13 @@ defmodule JidoRunic.Strategy do
             pending_runnables: pending
         })
 
+      agent =
+        if status == :failed do
+          %{agent | state: agent.state |> Map.put(:status, :failed) |> Map.put(:error, runnable.error)}
+        else
+          agent
+        end
+
       {agent, [%Emit{signal: error_signal}]}
     else
       workflow = Workflow.apply_runnable(workflow, runnable)
@@ -161,6 +213,8 @@ defmodule JidoRunic.Strategy do
             pending_runnables: %{}
         })
 
+      agent = %{agent | state: agent.state |> Map.put(:status, :completed) |> Map.put(:last_answer, productions)}
+
       {agent, emit_directives}
     end
     end
@@ -187,6 +241,13 @@ defmodule JidoRunic.Strategy do
         | status: status,
           pending_runnables: pending
       })
+
+    agent =
+      if status == :failed do
+        %{agent | state: agent.state |> Map.put(:status, :failed) |> Map.put(:error, reason)}
+      else
+        agent
+      end
 
     {agent, [%Emit{signal: error_signal}]}
   end
@@ -262,7 +323,8 @@ defmodule JidoRunic.Strategy do
     [
       {"runic.feed", {:strategy_cmd, :runic_feed_signal}},
       {"runic.runnable.completed", {:strategy_cmd, :runic_apply_result}},
-      {"runic.runnable.failed", {:strategy_cmd, :runic_handle_failure}}
+      {"runic.runnable.failed", {:strategy_cmd, :runic_handle_failure}},
+      {"runic.set_workflow", {:strategy_cmd, :runic_set_workflow}}
     ]
   end
 
