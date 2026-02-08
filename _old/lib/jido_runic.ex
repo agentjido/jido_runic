@@ -1,10 +1,10 @@
-defmodule Jido.Runic do
+defmodule JidoRunic do
   @moduledoc """
   Runic workflow integration for the Jido ecosystem.
 
   ## Overview
 
-  Jido.Runic bridges Runic DAG workflow composition with Jido agents,
+  JidoRunic bridges Runic DAG workflow composition with Jido agents,
   enabling powerful dataflow-driven agent workflows.
 
   ## Status

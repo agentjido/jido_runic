@@ -1,4 +1,4 @@
-defmodule JidoRunicTest do
+defmodule Jido.RunicTest do
   use ExUnit.Case
-  doctest JidoRunic
+  doctest Jido.Runic
 end

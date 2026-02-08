@@ -1,25 +1,16 @@
-# AI Research Studio Demo
-#
-# Demonstrates a Runic workflow-powered research pipeline using
-# Jido.Runic.Strategy as the agent strategy.
-#
-# Pipeline: PlanQueries → SimulateSearch → BuildOutline → DraftArticle → EditAndAssemble
-#
 # Run with: cd projects/jido_runic && mix run lib/examples/studio_demo.exs
 
-alias Jido.Runic.Examples.Studio.OrchestratorAgent
+alias JidoRunic.Examples.Studio.OrchestratorAgent
 
 topic = System.get_env("STUDIO_TOPIC", "Elixir Concurrency")
 
-IO.puts("\nStarting AI Research Studio...")
+IO.puts("Starting AI Research Studio...")
 IO.puts("Topic: #{topic}")
 IO.puts("")
 
-{:ok, _} = Jido.start_link(name: StudioDemo.Jido)
+result = OrchestratorAgent.run(topic, timeout: 60_000)
 
-result = OrchestratorAgent.run(topic, jido: StudioDemo.Jido, timeout: 120_000)
-
-IO.puts("\nStatus: #{result.status}")
+IO.puts("Status: #{result.status}")
 IO.puts("Productions: #{length(result.productions)}")
 IO.puts("Facts: #{length(result.facts)}")
 IO.puts("Events: #{length(result.events)}")
@@ -34,5 +25,3 @@ case OrchestratorAgent.article(result) do
   _ ->
     IO.puts("No article markdown produced.")
 end
-
-Jido.stop(StudioDemo.Jido)

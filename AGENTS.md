@@ -17,12 +17,12 @@
 - Use `@spec` for type specifications
 - Return tagged tuples: `{:ok, result}` or `{:error, reason}`
 - Use Zoi schemas for struct validation
-- Use Splode for error handling via `JidoRunic.Error`
-- Prefix test modules with namespace: `JidoRunicTest.ModuleName`
+- Use Splode for error handling via `Jido.Runic.Error`
+- Prefix test modules with namespace: `Jido.RunicTest.ModuleName`
 
 ## Architecture
-- `JidoRunic` - Main module, public API
-- `JidoRunic.Error` - Centralized Splode error handling
+- `Jido.Runic` - Main module, public API
+- `Jido.Runic.Error` - Centralized Splode error handling
 
 ## Git Commit Guidelines
 - Use conventional commit format: `type(scope): description`

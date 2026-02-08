@@ -16,7 +16,7 @@ defmodule JidoRunic.MixProject do
       aliases: aliases(),
 
       # Documentation
-      name: "JidoRunic",
+      name: "Jido.Runic",
       description: @description,
       source_url: @source_url,
       homepage_url: @source_url,
@@ -28,7 +28,7 @@ defmodule JidoRunic.MixProject do
         tool: ExCoveralls,
         summary: [threshold: 90],
         export: "cov",
-        ignore_modules: [~r/^JidoRunicTest\./]
+        ignore_modules: [~r/^Jido\.RunicTest\./]
       ],
 
       # Dialyzer

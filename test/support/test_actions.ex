@@ -1,69 +1,57 @@
-defmodule JidoRunicTest.TestActions do
+defmodule Jido.RunicTest.Actions.Add do
   @moduledoc false
+  use Jido.Action,
+    name: "add",
+    description: "Adds a value to the input",
+    schema: [
+      value: [type: :integer, required: true, doc: "The value to add"],
+      amount: [type: :integer, default: 1, doc: "Amount to add"]
+    ]
 
-  defmodule AddOne do
-    @moduledoc false
-    use Jido.Action,
-      name: "add_one",
-      description: "Adds one to a value",
-      schema: [
-        value: [type: :integer, required: true]
-      ]
-
-    def run(%{value: value}, _context) do
-      {:ok, %{value: value + 1}}
-    end
+  @impl true
+  def run(params, _context) do
+    {:ok, %{value: params.value + params.amount}}
   end
+end
 
-  defmodule Double do
-    @moduledoc false
-    use Jido.Action,
-      name: "double",
-      description: "Doubles a value",
-      schema: [
-        value: [type: :integer, required: true]
-      ]
+defmodule Jido.RunicTest.Actions.Double do
+  @moduledoc false
+  use Jido.Action,
+    name: "double",
+    description: "Doubles the input value",
+    schema: [
+      value: [type: :integer, required: true, doc: "The value to double"]
+    ]
 
-    def run(%{value: value}, _context) do
-      {:ok, %{value: value * 2}}
-    end
+  @impl true
+  def run(params, _context) do
+    {:ok, %{value: params.value * 2}}
   end
+end
 
-  defmodule Concat do
-    @moduledoc false
-    use Jido.Action,
-      name: "concat",
-      description: "Concatenates strings",
-      schema: [
-        a: [type: :string, required: true],
-        b: [type: :string, required: true]
-      ]
+defmodule Jido.RunicTest.Actions.Fail do
+  @moduledoc false
+  use Jido.Action,
+    name: "fail",
+    description: "Always fails",
+    schema: [
+      reason: [type: :string, default: "intentional failure", doc: "Failure reason"]
+    ]
 
-    def run(%{a: a, b: b}, _context) do
-      {:ok, %{result: a <> b}}
-    end
+  @impl true
+  def run(params, _context) do
+    {:error, params.reason}
   end
+end
 
-  defmodule FailingAction do
-    @moduledoc false
-    use Jido.Action,
-      name: "failing_action",
-      description: "Always fails",
-      schema: []
+defmodule Jido.RunicTest.Actions.NoSchema do
+  @moduledoc false
+  use Jido.Action,
+    name: "no_schema",
+    description: "Action with no schema"
 
-    def run(_params, _context) do
-      {:error, "intentional failure"}
-    end
-  end
-
-  defmodule NoSchemaAction do
-    @moduledoc false
-    use Jido.Action,
-      name: "no_schema",
-      description: "Action without schema"
-
-    def run(params, _context) do
-      {:ok, params}
-    end
+  @impl true
+  def run(params, _context) do
+    {:ok, params}
   end
 end
