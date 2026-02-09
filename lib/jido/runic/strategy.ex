@@ -156,9 +156,9 @@ defmodule Jido.Runic.Strategy do
           wf
       end
 
-    strat_state = StratState.get(agent, nil)
+    strat_state = StratState.get(agent, %{})
 
-    if strat_state && Map.get(strat_state, :workflow) do
+    if Map.get(strat_state, :workflow) do
       {agent, []}
     else
       strat = %{
@@ -220,42 +220,46 @@ defmodule Jido.Runic.Strategy do
 
   @impl true
   def tick(agent, _ctx) do
-    strat = StratState.get(agent, nil)
+    case StratState.get(agent, %{}) do
+      %{queued: _, pending: _, max_concurrent: _, workflow: _, status: _} = strat ->
+        cond do
+          strat.queued != [] &&
+              (strat.max_concurrent == :infinity ||
+                 map_size(strat.pending) < strat.max_concurrent) ->
+            {to_dispatch, remaining} =
+              if strat.max_concurrent == :infinity do
+                {strat.queued, []}
+              else
+                Enum.split(strat.queued, strat.max_concurrent - map_size(strat.pending))
+              end
 
-    cond do
-      strat && strat.queued != [] &&
-          (strat.max_concurrent == :infinity ||
-             map_size(strat.pending) < strat.max_concurrent) ->
-        {to_dispatch, remaining} =
-          if strat.max_concurrent == :infinity do
-            {strat.queued, []}
-          else
-            Enum.split(strat.queued, strat.max_concurrent - map_size(strat.pending))
-          end
+            directives = Enum.map(to_dispatch, &build_directive/1)
 
-        directives = Enum.map(to_dispatch, &build_directive/1)
+            pending =
+              Enum.reduce(to_dispatch, strat.pending, fn r, acc ->
+                Map.put(acc, r.id, r)
+              end)
 
-        pending =
-          Enum.reduce(to_dispatch, strat.pending, fn r, acc ->
-            Map.put(acc, r.id, r)
-          end)
+            agent = StratState.put(agent, %{strat | pending: pending, queued: remaining})
+            {agent, directives}
 
-        agent = StratState.put(agent, %{strat | pending: pending, queued: remaining})
-        {agent, directives}
+          strat.status == :running && Workflow.is_runnable?(strat.workflow) ->
+            {workflow, runnables} = Workflow.prepare_for_dispatch(strat.workflow)
 
-      strat && strat.status == :running && Workflow.is_runnable?(strat.workflow) ->
-        {workflow, runnables} = Workflow.prepare_for_dispatch(strat.workflow)
+            new =
+              Enum.reject(runnables, &Map.has_key?(strat.pending, &1.id))
 
-        new =
-          Enum.reject(runnables, &Map.has_key?(strat.pending, &1.id))
+            {directives, strat} =
+              dispatch_with_limit(new, %{strat | workflow: workflow})
 
-        {directives, strat} =
-          dispatch_with_limit(new, %{strat | workflow: workflow})
+            agent = StratState.put(agent, strat)
+            {agent, directives}
 
-        agent = StratState.put(agent, strat)
-        {agent, directives}
+          true ->
+            {agent, []}
+        end
 
-      true ->
+      _ ->
         {agent, []}
     end
   end

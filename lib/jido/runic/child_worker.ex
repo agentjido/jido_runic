@@ -62,8 +62,7 @@ defmodule Jido.Runic.ChildWorker.ExecuteAction do
       executed = RunnableExecution.execute(runnable)
       result_signal = RunnableExecution.completion_signal(executed, source: "/runic/child")
 
-      agent_like = %{state: context.state}
-      emit_directive = Directive.emit_to_parent(agent_like, result_signal)
+      emit_directive = Directive.emit_to_parent(%Jido.Agent{state: context.state}, result_signal)
 
       {:ok, %{}, List.wrap(emit_directive)}
     end

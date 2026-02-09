@@ -50,10 +50,14 @@ defimpl Runic.Transmutable, for: Atom do
       :non_existing ->
         false
 
-      beam_path ->
-        path = if is_list(beam_path), do: beam_path, else: String.to_charlist(beam_path)
+      :preloaded ->
+        false
 
-        case :beam_lib.chunks(path, [:exports]) do
+      :cover_compiled ->
+        false
+
+      beam_path when is_list(beam_path) ->
+        case :beam_lib.chunks(beam_path, [:exports]) do
           {:ok, {^mod, [exports: exports]}} ->
             Enum.member?(exports, {:__action_metadata__, 0})
 
