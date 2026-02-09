@@ -36,7 +36,30 @@ defimpl Runic.Transmutable, for: Atom do
   end
 
   defp jido_action?(mod) when is_atom(mod) do
-    Code.ensure_loaded?(mod) and
-      function_exported?(mod, :__action_metadata__, 0)
+    case :code.is_loaded(mod) do
+      {:file, _} ->
+        function_exported?(mod, :__action_metadata__, 0)
+
+      false ->
+        beam_exports_action_metadata?(mod)
+    end
+  end
+
+  defp beam_exports_action_metadata?(mod) do
+    case :code.which(mod) do
+      :non_existing ->
+        false
+
+      beam_path ->
+        path = if is_list(beam_path), do: beam_path, else: String.to_charlist(beam_path)
+
+        case :beam_lib.chunks(path, [:exports]) do
+          {:ok, {^mod, [exports: exports]}} ->
+            Enum.member?(exports, {:__action_metadata__, 0})
+
+          _ ->
+            false
+        end
+    end
   end
 end

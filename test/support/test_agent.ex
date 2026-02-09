@@ -18,12 +18,13 @@ defmodule Jido.RunicTest.TestAgentWithWorkflow do
   use Jido.Agent,
     name: "runic_test_agent_wf",
     description: "Test agent with a single-node workflow",
-    strategy:
-      {Jido.Runic.Strategy,
-       workflow:
-         Runic.Workflow.new(name: :single)
-         |> Runic.Workflow.add(ActionNode.new(Add, %{amount: 10}, name: :add))},
+    strategy: {Jido.Runic.Strategy, workflow_fn: &__MODULE__.build_workflow/0},
     schema: [
       value: [type: :any, default: nil]
     ]
+
+  def build_workflow do
+    Runic.Workflow.new(name: :single)
+    |> Runic.Workflow.add(ActionNode.new(Add, %{amount: 10}, name: :add))
+  end
 end

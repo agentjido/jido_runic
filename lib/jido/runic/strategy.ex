@@ -52,6 +52,7 @@ defmodule Jido.Runic.Strategy do
   use Jido.Agent.Strategy
 
   alias Jido.Agent.Strategy.State, as: StratState
+  alias Jido.Agent.Directive
   alias Runic.Workflow
   alias Runic.Workflow.Fact
   alias Jido.Runic.SignalFact
@@ -94,6 +95,30 @@ defmodule Jido.Runic.Strategy do
         }),
       doc: "Set the execution mode to :auto or :step",
       name: "runic.set_mode"
+    },
+    :runic_child_dispatch => %{
+      schema:
+        Zoi.object(%{
+          tag: Zoi.any(),
+          runnable_id: Zoi.any(),
+          runnable: Zoi.any(),
+          executor: Zoi.any()
+        }),
+      doc: "Dispatch a runnable to a child agent",
+      name: "runic.child_dispatch"
+    },
+    :runic_child_started => %{
+      schema:
+        Zoi.object(%{
+          tag: Zoi.any(),
+          pid: Zoi.any(),
+          parent_id: Zoi.any() |> Zoi.optional(),
+          child_id: Zoi.any() |> Zoi.optional(),
+          child_module: Zoi.any() |> Zoi.optional(),
+          meta: Zoi.any() |> Zoi.optional()
+        }),
+      doc: "Handle a child agent starting",
+      name: "runic.child_started"
     }
   }
 
@@ -109,7 +134,9 @@ defmodule Jido.Runic.Strategy do
       {"runic.set_workflow", {:strategy_cmd, :runic_set_workflow}},
       {"runic.step", {:strategy_cmd, :runic_step}},
       {"runic.resume", {:strategy_cmd, :runic_resume}},
-      {"runic.set_mode", {:strategy_cmd, :runic_set_mode}}
+      {"runic.set_mode", {:strategy_cmd, :runic_set_mode}},
+      {"runic.child.dispatch", {:strategy_cmd, :runic_child_dispatch}},
+      {"jido.agent.child.started", {:strategy_cmd, :runic_child_started}}
     ]
   end
 
@@ -143,7 +170,10 @@ defmodule Jido.Runic.Strategy do
         ran_nodes: MapSet.new(),
         execution_mode: Keyword.get(strategy_opts, :execution_mode, :auto),
         step_history: [],
-        held_runnables: []
+        held_runnables: [],
+        child_assignments: %{},
+        runnable_to_child: %{},
+        child_modules: Keyword.get(strategy_opts, :child_modules, %{})
       }
 
       {StratState.put(agent, strat), []}
@@ -179,8 +209,7 @@ defmodule Jido.Runic.Strategy do
         pending_count: map_size(Map.get(strat, :pending, %{})),
         queued_count: length(Map.get(strat, :queued, [])),
         is_runnable: workflow && Workflow.is_runnable?(workflow),
-        productions_count:
-          if(workflow, do: length(Workflow.raw_productions(workflow)), else: 0),
+        productions_count: if(workflow, do: length(Workflow.raw_productions(workflow)), else: 0),
         execution_mode: Map.get(strat, :execution_mode, :auto),
         step_history: step_history,
         held_count: length(Map.get(strat, :held_runnables, [])),
@@ -253,10 +282,14 @@ defmodule Jido.Runic.Strategy do
         queued: [],
         ran_nodes: MapSet.new(),
         held_runnables: [],
-        step_history: []
+        step_history: [],
+        child_assignments: %{},
+        runnable_to_child: %{}
     }
 
-    {StratState.put(agent, strat), []}
+    agent = StratState.put(agent, strat)
+    agent = put_in(agent.state[:status], nil)
+    {agent, []}
   end
 
   defp handle_instruction(agent, %Jido.Instruction{action: :runic_step}) do
@@ -269,6 +302,14 @@ defmodule Jido.Runic.Strategy do
 
   defp handle_instruction(agent, %Jido.Instruction{action: :runic_set_mode, params: params}) do
     handle_set_mode(agent, params)
+  end
+
+  defp handle_instruction(agent, %Jido.Instruction{action: :runic_child_dispatch, params: params}) do
+    handle_child_dispatch(agent, params)
+  end
+
+  defp handle_instruction(agent, %Jido.Instruction{action: :runic_child_started, params: params}) do
+    handle_child_started(agent, params)
   end
 
   defp handle_instruction(agent, _instruction) do
@@ -321,6 +362,14 @@ defmodule Jido.Runic.Strategy do
     runnable = Map.get(params, :runnable)
     pending = Map.delete(strat.pending, runnable.id)
 
+    {child_assignments, runnable_to_child} =
+      case Map.pop(strat.runnable_to_child, runnable.id) do
+        {nil, rtc} -> {strat.child_assignments, rtc}
+        {tag, rtc} -> {Map.delete(strat.child_assignments, tag), rtc}
+      end
+
+    strat = %{strat | child_assignments: child_assignments, runnable_to_child: runnable_to_child}
+
     ran_nodes = MapSet.put(strat.ran_nodes, runnable.node.hash)
 
     step_history =
@@ -334,8 +383,7 @@ defmodule Jido.Runic.Strategy do
               else: nil
             ),
           input: runnable.input_fact.value,
-          output:
-            if(runnable.status == :completed, do: runnable.result.value, else: nil),
+          output: if(runnable.status == :completed, do: runnable.result.value, else: nil),
           error: if(runnable.status == :failed, do: runnable.error, else: nil),
           status: runnable.status,
           completed_at: System.monotonic_time(:millisecond)
@@ -480,6 +528,70 @@ defmodule Jido.Runic.Strategy do
         end
 
       {agent, directives}
+    end
+  end
+
+  # -- Child Delegation Handlers ------------------------------------------------
+
+  defp handle_child_dispatch(agent, params) do
+    strat = StratState.get(agent)
+    tag = Map.get(params, :tag)
+    runnable_id = Map.get(params, :runnable_id)
+    executor = Map.get(params, :executor)
+
+    child_module =
+      case executor do
+        {:child, _tag, %{module: mod}} -> mod
+        {:child, _tag, mod} when is_atom(mod) -> mod
+        _ -> Map.get(strat.child_modules, tag)
+      end
+
+    if child_module do
+      child_assignments = Map.put(strat.child_assignments, tag, runnable_id)
+      runnable_to_child = Map.put(strat.runnable_to_child, runnable_id, tag)
+
+      strat = %{
+        strat
+        | child_assignments: child_assignments,
+          runnable_to_child: runnable_to_child
+      }
+
+      agent = StratState.put(agent, strat)
+
+      spawn_directive =
+        Directive.spawn_agent(child_module, tag, meta: %{runnable_id: runnable_id})
+
+      {agent, [spawn_directive]}
+    else
+      {agent, []}
+    end
+  end
+
+  defp handle_child_started(agent, params) do
+    strat = StratState.get(agent)
+    tag = Map.get(params, :tag)
+    pid = Map.get(params, :pid)
+
+    case Map.get(strat.child_assignments, tag) do
+      nil ->
+        {agent, []}
+
+      runnable_id ->
+        case Map.get(strat.pending, runnable_id) do
+          nil ->
+            {agent, []}
+
+          runnable ->
+            work_signal =
+              Jido.Signal.new!(
+                "runic.child.execute",
+                %{runnable: runnable, runnable_id: runnable_id, tag: tag},
+                source: "/runic/delegator"
+              )
+
+            emit_directive = Directive.emit_to_pid(work_signal, pid)
+            {agent, [emit_directive]}
+        end
     end
   end
 

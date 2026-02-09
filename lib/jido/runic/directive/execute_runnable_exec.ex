@@ -39,6 +39,26 @@ defimpl Jido.AgentServer.DirectiveExec, for: Jido.Runic.Directive.ExecuteRunnabl
     {:async, nil, state}
   end
 
+  def exec(%{target: {:child, tag}} = directive, _input_signal, state) do
+    agent_pid = self()
+
+    signal =
+      Jido.Signal.new!(
+        "runic.child.dispatch",
+        %{
+          tag: tag,
+          runnable_id: directive.runnable_id,
+          runnable: directive.runnable,
+          executor: directive.runnable.node.executor
+        },
+        source: "/runic/executor"
+      )
+
+    Jido.AgentServer.cast(agent_pid, signal)
+
+    {:async, nil, state}
+  end
+
   def exec(%{target: nil} = directive, input_signal, state) do
     exec(%{directive | target: :local}, input_signal, state)
   end

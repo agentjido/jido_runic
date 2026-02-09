@@ -73,6 +73,7 @@ defmodule Jido.Runic.ActionNode do
 
     {name, opts} = Keyword.pop_lazy(opts, :name, fn -> derive_name(action_mod) end)
     {context, opts} = Keyword.pop(opts, :context, %{})
+    {executor, opts} = Keyword.pop(opts, :executor, :local)
     exec_opts = Keyword.put_new(opts, :timeout, 0)
 
     %__MODULE__{
@@ -82,6 +83,7 @@ defmodule Jido.Runic.ActionNode do
       params: params,
       context: context,
       exec_opts: exec_opts,
+      executor: executor,
       inputs: derive_inputs(action_mod),
       outputs: derive_outputs(action_mod)
     }

@@ -169,6 +169,7 @@ defmodule Jido.Runic.Introspection do
       |> Enum.filter(fn edge ->
         from_hash = node_hash(edge.v1)
         to_hash = node_hash(edge.v2)
+
         from_hash != nil and to_hash != nil and
           MapSet.member?(component_hashes, from_hash) and
           MapSet.member?(component_hashes, to_hash) and

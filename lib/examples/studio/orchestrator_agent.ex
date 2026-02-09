@@ -291,9 +291,7 @@ defmodule Jido.Runic.Examples.Studio.OrchestratorAgent do
   defp do_step(pid, strat, timeout, on_step, step_index, steps) do
     graph_before = Introspection.annotated_graph(strat.workflow, strat)
 
-    Logger.info(
-      "[Studio:Step] Step #{step_index}: #{length(strat.held_runnables)} runnable(s) held"
-    )
+    Logger.info("[Studio:Step] Step #{step_index}: #{length(strat.held_runnables)} runnable(s) held")
 
     held_names =
       Enum.map(strat.held_runnables, fn r -> r.node.name end)

@@ -62,6 +62,7 @@ defmodule Jido.Runic.StepModeTest do
 
   defp single_node_workflow do
     node = ActionNode.new(Add, %{amount: 10}, name: :add)
+
     Workflow.new(name: :single)
     |> Workflow.add(node)
   end
@@ -69,6 +70,7 @@ defmodule Jido.Runic.StepModeTest do
   defp pipeline_workflow do
     add_node = ActionNode.new(Add, %{amount: 1}, name: :add)
     double_node = ActionNode.new(Double, %{}, name: :double)
+
     Workflow.new(name: :pipeline)
     |> Workflow.add(add_node)
     |> Workflow.add(double_node, to: :add)
@@ -76,6 +78,7 @@ defmodule Jido.Runic.StepModeTest do
 
   defp failing_workflow do
     node = ActionNode.new(Fail, %{}, name: :fail)
+
     Workflow.new(name: :failing)
     |> Workflow.add(node)
   end
