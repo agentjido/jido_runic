@@ -1,12 +1,9 @@
 defmodule Jido.RunicTest.DelegatingOrchestratorTest do
   use ExUnit.Case, async: true
 
-  alias Jido.Runic.Examples.Delegating.{
-    DelegatingOrchestrator,
-    DrafterAgent,
-    EditorAgent
-  }
+  alias Jido.Runic.Examples.Delegating.DelegatingOrchestrator
 
+  alias Jido.Runic.ChildWorker
   alias Jido.Runic.Strategy
   alias Jido.Runic.ActionNode
   alias Jido.Runic.Directive.ExecuteRunnable
@@ -323,8 +320,8 @@ defmodule Jido.RunicTest.DelegatingOrchestratorTest do
       agent =
         make_agent(workflow,
           child_modules: %{
-            drafter: DrafterAgent,
-            editor: EditorAgent
+            drafter: ChildWorker,
+            editor: ChildWorker
           }
         )
 
@@ -386,7 +383,7 @@ defmodule Jido.RunicTest.DelegatingOrchestratorTest do
           pid: self(),
           parent_id: "parent",
           child_id: "drafter-1",
-          child_module: DrafterAgent,
+          child_module: ChildWorker,
           meta: %{}
         })
 
@@ -420,7 +417,7 @@ defmodule Jido.RunicTest.DelegatingOrchestratorTest do
           pid: self(),
           parent_id: "parent",
           child_id: "editor-1",
-          child_module: EditorAgent,
+          child_module: ChildWorker,
           meta: %{}
         })
 
@@ -480,7 +477,7 @@ defmodule Jido.RunicTest.DelegatingOrchestratorTest do
 
   describe "init with child_modules" do
     test "stores child_modules in strategy state" do
-      modules = %{drafter: DrafterAgent, editor: EditorAgent}
+      modules = %{drafter: ChildWorker, editor: ChildWorker}
       workflow = Workflow.new(name: :test)
       agent = make_agent(workflow, child_modules: modules)
 

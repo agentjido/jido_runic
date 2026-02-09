@@ -1,10 +1,10 @@
 defmodule Jido.Runic.Examples.Delegating.ExecuteRunnableAction do
   @moduledoc """
-  Jido Action that executes a Runic Runnable and returns the result to the parent.
+  Example custom child action for executing a Runic Runnable.
 
-  Used by child agents in a delegating orchestrator pattern. The child receives
-  a `"runic.child.execute"` signal containing a Runnable, executes it locally,
-  and emits the result back to the parent via `emit_to_parent`.
+  Demonstrates how to build a custom child action that wraps
+  `Jido.Runic.RunnableExecution` with additional logic. For most cases,
+  use `Jido.Runic.ChildWorker` which provides this behavior out of the box.
   """
 
   use Jido.Action,
@@ -17,34 +17,12 @@ defmodule Jido.Runic.Examples.Delegating.ExecuteRunnableAction do
     ]
 
   alias Jido.Agent.Directive
-  alias Runic.Workflow.{Invokable, Runnable}
+  alias Jido.Runic.RunnableExecution
 
   @impl true
   def run(%{runnable: runnable, runnable_id: _runnable_id, tag: _tag}, context) do
-    executed =
-      try do
-        Invokable.execute(runnable.node, runnable)
-      rescue
-        e ->
-          Runnable.fail(runnable, Exception.message(e))
-      catch
-        kind, reason ->
-          Runnable.fail(runnable, "Caught #{kind}: #{inspect(reason)}")
-      end
-
-    signal_type =
-      case executed.status do
-        :completed -> "runic.runnable.completed"
-        :failed -> "runic.runnable.failed"
-        :skipped -> "runic.runnable.completed"
-      end
-
-    result_signal =
-      Jido.Signal.new!(
-        signal_type,
-        %{runnable: executed},
-        source: "/runic/child"
-      )
+    executed = RunnableExecution.execute(runnable)
+    result_signal = RunnableExecution.completion_signal(executed, source: "/runic/child")
 
     agent_like = %{state: context.state}
     emit_directive = Directive.emit_to_parent(agent_like, result_signal)

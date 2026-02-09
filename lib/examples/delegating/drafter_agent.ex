@@ -1,10 +1,10 @@
 defmodule Jido.Runic.Examples.Delegating.DrafterAgent do
   @moduledoc """
-  Child agent specialized for article drafting.
+  Example custom child agent specialized for article drafting.
 
-  A plain Jido agent (not a Runic agent) that receives work from the
-  delegating orchestrator, executes the DraftArticle action via a Runnable,
-  and returns the result to the parent.
+  Demonstrates how to create a custom child agent with domain-specific
+  routing. For most delegation use cases, `Jido.Runic.ChildWorker`
+  provides this behavior out of the box.
   """
 
   use Jido.Agent,

@@ -16,9 +16,9 @@ defmodule Jido.Runic.Examples.Delegating.DelegatingOrchestrator do
   1. Orchestrator starts, workflow runs PlanQueries → SimulateSearch → BuildOutline locally
   2. When DraftArticle becomes runnable, strategy emits `SpawnAgent` for `:drafter`
   3. On `jido.agent.child.started`, sends the runnable to the child via `emit_to_pid`
-  4. Child executes the action, sends `runic.runnable.completed` via `emit_to_parent`
+  4. Child (`Jido.Runic.ChildWorker`) executes via `RunnableExecution`, emits result to parent
   5. Parent receives result, applies it to workflow, advancing to EditAndAssemble
-  6. Same pattern for EditAndAssemble → EditorAgent
+  6. Same pattern repeats for EditAndAssemble with a second ChildWorker
   7. Workflow completes normally
   """
 
@@ -30,8 +30,8 @@ defmodule Jido.Runic.Examples.Delegating.DelegatingOrchestrator do
       {Jido.Runic.Strategy,
        workflow_fn: &__MODULE__.build_workflow/0,
        child_modules: %{
-         drafter: Jido.Runic.Examples.Delegating.DrafterAgent,
-         editor: Jido.Runic.Examples.Delegating.EditorAgent
+         drafter: Jido.Runic.ChildWorker,
+         editor: Jido.Runic.ChildWorker
        }},
     schema: []
 
