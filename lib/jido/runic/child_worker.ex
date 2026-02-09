@@ -57,8 +57,7 @@ defmodule Jido.Runic.ChildWorker.ExecuteAction do
   @impl true
   def run(%{runnable: runnable, runnable_id: runnable_id, tag: _tag}, context) do
     if runnable.id != runnable_id do
-      {:error,
-       "Runnable ID mismatch: expected #{inspect(runnable_id)}, got #{inspect(runnable.id)}"}
+      {:error, "Runnable ID mismatch: expected #{inspect(runnable_id)}, got #{inspect(runnable.id)}"}
     else
       executed = RunnableExecution.execute(runnable)
       result_signal = RunnableExecution.completion_signal(executed, source: "/runic/child")

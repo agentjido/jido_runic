@@ -1,3 +1,55 @@
+defmodule Jido.RunicTest.Actions.PlainModule do
+  @moduledoc false
+  def run(_, _), do: {:ok, %{}}
+end
+
+defmodule Jido.RunicTest.Actions.WithOutputSchema do
+  @moduledoc false
+  use Jido.Action,
+    name: "with_output_schema",
+    description: "Has output schema",
+    schema: [input: [type: :any]],
+    output_schema: [
+      result: [type: :map, doc: "The result map"]
+    ]
+
+  @impl true
+  def run(params, _ctx), do: {:ok, params}
+end
+
+defmodule Jido.RunicTest.Actions.EmptyOutputSchema do
+  @moduledoc false
+  use Jido.Action,
+    name: "empty_output_schema",
+    description: "Has empty output schema",
+    schema: [input: [type: :any]],
+    output_schema: []
+
+  @impl true
+  def run(params, _ctx), do: {:ok, params}
+end
+
+defmodule Jido.RunicTest.Actions.EmptySchema do
+  @moduledoc false
+  use Jido.Action,
+    name: "empty_schema",
+    description: "Has empty schema"
+
+  @impl true
+  def run(params, _ctx), do: {:ok, params}
+end
+
+defmodule Jido.RunicTest.Actions.ReturnsExtra do
+  @moduledoc false
+  use Jido.Action,
+    name: "returns_extra",
+    description: "Returns extra data",
+    schema: [value: [type: :any]]
+
+  @impl true
+  def run(params, _ctx), do: {:ok, %{value: params.value}, %{meta: "extra"}}
+end
+
 defmodule Jido.Runic.ActionNodeTest do
   use ExUnit.Case, async: true
 
@@ -6,6 +58,14 @@ defmodule Jido.Runic.ActionNodeTest do
   alias Runic.Workflow.Fact
 
   alias Jido.RunicTest.Actions.{Add, Double, Fail, NoSchema}
+
+  alias Jido.RunicTest.Actions.{
+    PlainModule,
+    WithOutputSchema,
+    EmptyOutputSchema,
+    EmptySchema,
+    ReturnsExtra
+  }
 
   describe "new/3" do
     test "creates an ActionNode with default name derived from module" do
@@ -173,6 +233,19 @@ defmodule Jido.Runic.ActionNodeTest do
     end
   end
 
+  describe "invoke/3" do
+    test "executes the full prepare-execute-apply cycle" do
+      node = ActionNode.new(Add, %{amount: 10}, name: :add)
+      workflow = Workflow.new(name: :test) |> Workflow.add(node)
+      fact = Fact.new(value: %{value: 5})
+
+      updated = Runic.Workflow.Invokable.invoke(node, workflow, fact)
+      assert %Workflow{} = updated
+      productions = Workflow.raw_productions(updated)
+      assert %{value: 15} in productions
+    end
+  end
+
   describe "three-phase execution (prepare/execute/apply)" do
     test "prepare returns a pending runnable" do
       node = ActionNode.new(Add, %{amount: 1}, name: :add)
@@ -236,6 +309,85 @@ defmodule Jido.Runic.ActionNodeTest do
       assert executed.status == :completed
       updated_workflow = executed.apply_fn.(workflow)
       assert %Workflow{} = updated_workflow
+    end
+  end
+
+  describe "action_metadata/1 with plain module" do
+    test "returns nil when module does not export to_json/0" do
+      node = ActionNode.new(PlainModule)
+      assert ActionNode.action_metadata(node) == nil
+    end
+  end
+
+  describe "derive_outputs with output_schema" do
+    test "derives output keys from output_schema/0" do
+      node = ActionNode.new(WithOutputSchema)
+      output_keys = Keyword.keys(node.outputs)
+      assert :result in output_keys
+    end
+
+    test "falls back to default outputs when output_schema is empty" do
+      node = ActionNode.new(EmptyOutputSchema)
+      assert node.outputs == [result: [type: :any, doc: "Action result"]]
+    end
+  end
+
+  describe "derive_inputs with empty schema" do
+    test "falls back to default inputs when schema is empty" do
+      node = ActionNode.new(EmptySchema)
+      assert node.inputs == [input: [type: :any, doc: "Input to the action"]]
+    end
+  end
+
+  describe "to_params non-map branch" do
+    test "wraps non-map fact value in %{input: value}" do
+      node = ActionNode.new(NoSchema, %{}, name: :no_schema)
+
+      workflow =
+        Workflow.new(name: :test)
+        |> Workflow.add(node)
+
+      fact = Fact.new(value: 42)
+
+      {:ok, runnable} = Runic.Workflow.Invokable.prepare(node, workflow, fact)
+      executed = Runic.Workflow.Invokable.execute(node, runnable)
+
+      assert executed.status == :completed
+      assert %Fact{value: %{input: 42}} = executed.result
+    end
+  end
+
+  describe "connect/3 with list (Join creation)" do
+    test "connects a node to multiple parents via a join" do
+      add1 = ActionNode.new(Add, %{amount: 1}, name: :add1)
+      add2 = ActionNode.new(Add, %{amount: 2}, name: :add2)
+      join_node = ActionNode.new(Double, %{}, name: :double)
+
+      workflow =
+        Workflow.new(name: :join_test)
+        |> Workflow.add(add1)
+        |> Workflow.add(add2)
+        |> Workflow.add(join_node, to: [:add1, :add2])
+
+      assert %Workflow{} = workflow
+    end
+  end
+
+  describe "{:ok, result, extra} branch" do
+    test "wraps result and extra into the produced fact" do
+      node = ActionNode.new(ReturnsExtra, %{value: "hello"}, name: :returns_extra)
+
+      workflow =
+        Workflow.new(name: :test)
+        |> Workflow.add(node)
+
+      fact = Fact.new(value: %{value: "hello"})
+
+      {:ok, runnable} = Runic.Workflow.Invokable.prepare(node, workflow, fact)
+      executed = Runic.Workflow.Invokable.execute(node, runnable)
+
+      assert executed.status == :completed
+      assert %Fact{value: %{result: %{value: "hello"}, extra: %{meta: "extra"}}} = executed.result
     end
   end
 end

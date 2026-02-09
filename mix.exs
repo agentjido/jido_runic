@@ -28,7 +28,7 @@ defmodule JidoRunic.MixProject do
         tool: ExCoveralls,
         summary: [threshold: 90],
         export: "cov",
-        ignore_modules: [~r/^Jido\.RunicTest\./]
+        ignore_modules: [~r/^Jido\.RunicTest\./, ~r/^Jido\.Runic\.Examples\./]
       ],
 
       # Dialyzer

@@ -93,4 +93,45 @@ defmodule Jido.Runic.TransmutableAtomTest do
       assert %{value: 12} in result
     end
   end
+
+  describe "transmute/1" do
+    test "delegates to to_workflow for a Jido Action module" do
+      workflow = Runic.Transmutable.transmute(Add)
+      assert %Workflow{} = workflow
+    end
+
+    test "delegates to to_workflow for a non-action atom" do
+      workflow = Runic.Transmutable.transmute(:some_value)
+      assert %Workflow{} = workflow
+    end
+  end
+
+  describe "jido_action? edge cases" do
+    test "non-existing module falls back to default component behavior" do
+      step = Runic.Transmutable.to_component(Elixir.This.Module.Does.Not.Exist)
+      assert %Runic.Workflow.Step{} = step
+    end
+
+    test "non-existing module falls back to default workflow behavior" do
+      workflow = Runic.Transmutable.to_workflow(Elixir.This.Module.Does.Not.Exist)
+      assert %Workflow{} = workflow
+    end
+  end
+
+  describe "beam_exports_action_metadata? via unloaded module" do
+    test "recognizes an action module after purging and deleting it" do
+      assert :code.is_loaded(Add) != false
+
+      :code.purge(Add)
+      :code.delete(Add)
+
+      try do
+        node = Runic.Transmutable.to_component(Add)
+        assert %ActionNode{} = node
+        assert node.action_mod == Add
+      after
+        {:module, _} = Code.ensure_loaded(Add)
+      end
+    end
+  end
 end
