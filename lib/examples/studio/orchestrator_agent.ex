@@ -23,7 +23,6 @@ defmodule Jido.Runic.Examples.Studio.OrchestratorAgent do
     strategy: {Jido.Runic.Strategy, workflow_fn: &__MODULE__.build_workflow/0},
     schema: []
 
-  alias Jido.Runic.ActionNode
   alias Jido.Runic.Introspection
   alias Jido.Agent.Strategy.State, as: StratState
   alias Runic.Workflow
@@ -38,18 +37,12 @@ defmodule Jido.Runic.Examples.Studio.OrchestratorAgent do
 
   @doc "Build the 5-node linear Runic DAG for the research pipeline."
   def build_workflow do
-    plan = ActionNode.new(PlanQueries, %{}, name: :plan_queries)
-    search = ActionNode.new(SimulateSearch, %{}, name: :simulate_search)
-    outline = ActionNode.new(BuildOutline, %{}, name: :build_outline)
-    draft = ActionNode.new(DraftArticle, %{}, name: :draft_article)
-    edit = ActionNode.new(EditAndAssemble, %{}, name: :edit_and_assemble)
-
     Workflow.new(name: :research_studio)
-    |> Workflow.add(plan)
-    |> Workflow.add(search, to: :plan_queries)
-    |> Workflow.add(outline, to: :simulate_search)
-    |> Workflow.add(draft, to: :build_outline)
-    |> Workflow.add(edit, to: :draft_article)
+    |> Workflow.add(PlanQueries)
+    |> Workflow.add(SimulateSearch, to: :plan_queries)
+    |> Workflow.add(BuildOutline, to: :simulate_search)
+    |> Workflow.add(DraftArticle, to: :build_outline)
+    |> Workflow.add(EditAndAssemble, to: :draft_article)
   end
 
   @doc """
