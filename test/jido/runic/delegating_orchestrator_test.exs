@@ -221,7 +221,8 @@ defmodule Jido.RunicTest.DelegatingOrchestratorTest do
           executor: {:child, :unknown}
         })
 
-      assert directives == []
+      assert [%Jido.Agent.Directive.Emit{signal: signal}] = directives
+      assert signal.type == "runic.child.missing"
     end
   end
 

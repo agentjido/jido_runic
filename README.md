@@ -91,6 +91,12 @@ workflow =
 
 A `Jido.Agent.Strategy` implementation powered by a Runic DAG. Incoming signals are converted to facts and fed into the workflow. Runnables are emitted as `ExecuteRunnable` directives. Completed runnables are applied back, advancing the workflow until satisfied.
 
+**Operational notes**
+
+- `execution_mode: :auto | :step` (default `:auto`). Step mode holds runnables until you send `runic.step` or `runic.resume`, useful for UI-driven debugging and demos.
+- Action nodes default to `timeout: 0` (inline) so Runic owns concurrency/time budgeting; override per node if you want Task-based timeouts.
+- To delegate work, set `executor: {:child, tag}` on an ActionNode and configure `child_modules: %{tag => MyChildAgent}` in strategy opts. Missing child modules emit a `runic.child.missing` signal for observability.
+
 ### `JidoRunic.Directive.ExecuteRunnable`
 
 A Jido directive that schedules execution of a Runic `Runnable`. The runtime interprets this by running the runnable and sending the result back as a completion signal.

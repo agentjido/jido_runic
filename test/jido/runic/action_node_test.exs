@@ -119,6 +119,10 @@ defmodule Jido.Runic.ActionNodeTest do
       node = ActionNode.new(Add, %{}, timeout: 5000)
       assert Keyword.get(node.exec_opts, :timeout) == 5000
     end
+
+    test "validates executor option" do
+      assert_raise ArgumentError, fn -> ActionNode.new(Add, %{}, executor: {:child, "not_atom"}) end
+    end
   end
 
   describe "action_metadata/1" do
@@ -144,6 +148,18 @@ defmodule Jido.Runic.ActionNodeTest do
         |> Workflow.raw_productions()
 
       assert %{value: 15} in result
+    end
+
+    test "fact params override node params (fact wins)" do
+      node = ActionNode.new(Add, %{amount: 1}, name: :add)
+
+      result =
+        Workflow.new(name: :test)
+        |> Workflow.add(node)
+        |> Workflow.react_until_satisfied(%{value: 5, amount: 3})
+        |> Workflow.raw_productions()
+
+      assert %{value: 8} in result
     end
 
     test "executes action with default params" do

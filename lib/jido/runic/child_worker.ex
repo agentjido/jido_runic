@@ -27,6 +27,10 @@ defmodule Jido.Runic.ChildWorker do
     ]
 
   @doc false
+  @spec plugin_specs() :: [Jido.Plugin.Spec.t()]
+  def plugin_specs, do: []
+
+  @doc false
   def signal_routes(_ctx) do
     [
       {"runic.child.execute", __MODULE__.ExecuteAction}

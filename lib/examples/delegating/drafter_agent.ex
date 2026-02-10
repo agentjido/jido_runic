@@ -13,6 +13,10 @@ defmodule Jido.Runic.Examples.Delegating.DrafterAgent do
       status: [type: :atom, default: :idle]
     ]
 
+  @doc false
+  @spec plugin_specs() :: [Jido.Plugin.Spec.t()]
+  def plugin_specs, do: []
+
   alias Jido.Runic.Examples.Delegating.ExecuteRunnableAction
 
   def signal_routes(_ctx) do

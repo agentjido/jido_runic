@@ -23,11 +23,18 @@ defmodule Jido.RunicTest.SignalFact do
       assert fact.ancestry == nil
     end
 
-    test "builds ancestry from source and cause" do
+    test "builds ancestry from source and cause (hash mode default)" do
       signal = %{data: %{x: 1}, source: "/origin", jidocause: "cause-abc"}
       fact = SignalFact.from_signal(signal)
 
       assert fact.ancestry == {:erlang.phash2("/origin"), :erlang.phash2("cause-abc")}
+    end
+
+    test "builds ancestry raw when ancestry_mode: :raw" do
+      signal = %{data: %{x: 1}, source: "/origin", jidocause: "cause-abc"}
+      fact = SignalFact.from_signal(signal, ancestry_mode: :raw)
+
+      assert fact.ancestry == {"/origin", "cause-abc"}
     end
 
     test "builds ancestry with source only" do
@@ -62,6 +69,14 @@ defmodule Jido.RunicTest.SignalFact do
       assert signal.type == "custom.type"
       assert signal.source == "/custom/source"
       assert signal.data == %{result: 99}
+    end
+
+    test "includes ancestry in signal when include_ancestry?: true" do
+      fact = %Fact{value: %{result: 7}, ancestry: {"/origin", "cause-1"}}
+      signal = SignalFact.to_signal(fact, include_ancestry?: true)
+
+      assert signal.source == "/origin"
+      assert Map.get(signal.extensions, "jidocause") == "cause-1"
     end
   end
 end

@@ -31,15 +31,19 @@ defmodule Jido.Runic.RunnableExecution do
   """
   @spec execute(Runnable.t()) :: Runnable.t()
   def execute(%Runnable{} = runnable) do
-    try do
-      Invokable.execute(runnable.node, runnable)
-    rescue
-      e ->
-        Runnable.fail(runnable, Exception.message(e))
-    catch
-      kind, reason ->
-        Runnable.fail(runnable, "Caught #{kind}: #{inspect(reason)}")
-    end
+    result =
+      try do
+        Invokable.execute(runnable.node, runnable)
+      rescue
+        e ->
+          Runnable.fail(runnable, format_exception(runnable, e, __STACKTRACE__))
+      catch
+        kind, reason ->
+          Runnable.fail(runnable, format_throw(runnable, kind, reason))
+      end
+
+    maybe_telemetry(result)
+    result
   end
 
   @doc """
@@ -66,5 +70,26 @@ defmodule Jido.Runic.RunnableExecution do
       end
 
     Jido.Signal.new!(signal_type, %{runnable: executed}, source: source)
+  end
+
+  defp format_exception(runnable, exception, stacktrace) do
+    node_label = runnable.node.name || runnable.node.hash || "unknown_node"
+    "[#{node_label}] " <> Exception.format(:error, exception, stacktrace)
+  end
+
+  defp format_throw(runnable, kind, reason) do
+    node_label = runnable.node.name || runnable.node.hash || "unknown_node"
+    "[#{node_label}] Caught #{kind}: #{inspect(reason)}"
+  end
+
+  defp maybe_telemetry(%Runnable{} = runnable) do
+    measurements = %{status: runnable.status}
+    metadata = %{node: runnable.node, runnable_id: runnable.id}
+
+    :telemetry.execute([:jido_runic, :runnable, runnable.status], measurements, metadata)
+  rescue
+    _ -> :ok
+  catch
+    _, _ -> :ok
   end
 end

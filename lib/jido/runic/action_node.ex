@@ -64,7 +64,10 @@ defmodule Jido.Runic.ActionNode do
   - `:name` — Node name used for graph lookups. Defaults to the action module's
     last segment, underscored (e.g., `MyApp.Actions.ValidateOrder` → `:validate_order`).
   - `:context` — Jido execution context map passed to `Jido.Exec.run/4`. Default `%{}`.
-  - `:timeout` — Override the Exec timeout. Default `0` (inline, no spawned task).
+  - `:timeout` — Override the Exec timeout. Default `0` (inline, no spawned task) so
+    Runic's scheduler owns concurrency and time budgeting.
+  - `:executor` — `:local` (default) or `{:child, tag}` / `{:child, tag, spec}` to
+    delegate execution; validated at construction time for safety.
   - Any other options are forwarded to `Jido.Exec.run/4` as exec opts.
   """
   @spec new(module(), map(), keyword()) :: t()
@@ -74,6 +77,7 @@ defmodule Jido.Runic.ActionNode do
     {name, opts} = Keyword.pop_lazy(opts, :name, fn -> derive_name(action_mod) end)
     {context, opts} = Keyword.pop(opts, :context, %{})
     {executor, opts} = Keyword.pop(opts, :executor, :local)
+    executor = validate_executor!(executor)
     exec_opts = Keyword.put_new(opts, :timeout, 0)
 
     %__MODULE__{
@@ -95,6 +99,15 @@ defmodule Jido.Runic.ActionNode do
   @spec action_metadata(t()) :: map() | nil
   def action_metadata(%__MODULE__{action_mod: mod}) do
     if function_exported?(mod, :to_json, 0), do: mod.to_json(), else: nil
+  end
+
+  defp validate_executor!(:local), do: :local
+  defp validate_executor!({:child, tag}) when is_atom(tag), do: {:child, tag}
+  defp validate_executor!({:child, tag, _spec} = exec) when is_atom(tag), do: exec
+
+  defp validate_executor!(other) do
+    raise ArgumentError,
+          "invalid :executor option for ActionNode. Expected :local or {:child, tag[, spec]}, got: #{inspect(other)}"
   end
 
   defp derive_name(action_mod) do
@@ -180,7 +193,7 @@ defimpl Runic.Workflow.Invokable, for: Jido.Runic.ActionNode do
   """
   def execute(%Jido.Runic.ActionNode{} = node, %Runnable{input_fact: fact, context: ctx} = runnable) do
     with {:ok, before_apply_fns} <- HookRunner.run_before(ctx, node, fact) do
-      merged_params = Map.merge(node.params, to_params(fact.value))
+      merged_params = Map.merge(node.params, to_params(fact.value), fn _k, _node_val, fact_val -> fact_val end)
 
       case Jido.Exec.run(node.action_mod, merged_params, node.context, node.exec_opts) do
         {:ok, result} ->

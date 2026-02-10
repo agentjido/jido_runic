@@ -86,7 +86,7 @@ defmodule JidoRunic.MixProject do
       {:git_ops, "~> 2.9", only: :dev, runtime: false},
       {:stream_data, "~> 1.0", only: [:dev, :test]},
       {:mimic, "~> 2.0", only: :test},
-      {:dotenv_parser, "~> 2.0", only: [:dev, :test]}
+      {:dotenv, "~> 3.1", only: [:dev, :test]}
     ]
   end
 

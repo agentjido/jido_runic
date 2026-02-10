@@ -192,6 +192,8 @@ defmodule Jido.RunicTest.Introspection do
       node_names = Enum.map(graph.nodes, & &1.name)
       assert :add in node_names
       assert :double in node_names
+      assert Enum.all?(graph.nodes, &Map.has_key?(&1, :executor))
+      assert Enum.any?(graph.nodes, &(&1.action_mod == Add))
 
       assert length(graph.edges) >= 1
       edge = hd(graph.edges)

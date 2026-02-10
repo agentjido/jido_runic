@@ -159,7 +159,9 @@ defmodule Jido.RunicTest.ChildWorker do
           executor: {:child, :unknown}
         })
 
-      assert directives == []
+      assert [%Jido.Agent.Directive.Emit{signal: signal}] = directives
+      assert signal.type == "runic.child.missing"
+      assert signal.data.tag == :unknown
     end
   end
 

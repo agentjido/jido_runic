@@ -21,6 +21,10 @@ defmodule Jido.Runic.Examples.Adaptive.AdaptiveResearcher do
     strategy: {Jido.Runic.Strategy, workflow_fn: &__MODULE__.build_phase_1/0},
     schema: []
 
+  @doc false
+  @spec plugin_specs() :: [Jido.Plugin.Spec.t()]
+  def plugin_specs, do: []
+
   alias Jido.Agent.Strategy.State, as: StratState
   alias Runic.Workflow
 

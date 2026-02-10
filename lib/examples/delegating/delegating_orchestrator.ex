@@ -35,6 +35,10 @@ defmodule Jido.Runic.Examples.Delegating.DelegatingOrchestrator do
        }},
     schema: []
 
+  @doc false
+  @spec plugin_specs() :: [Jido.Plugin.Spec.t()]
+  def plugin_specs, do: []
+
   alias Jido.Agent.Strategy.State, as: StratState
   alias Jido.Runic.ActionNode
   alias Runic.Workflow

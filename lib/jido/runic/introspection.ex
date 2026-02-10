@@ -158,7 +158,13 @@ defmodule Jido.Runic.Introspection do
 
     nodes =
       Enum.map(components, fn {name, node} ->
-        %{name: name, hash: node_hash(node), type: node_type(node)}
+        %{
+          name: name,
+          hash: node_hash(node),
+          type: node_type(node),
+          action_mod: node_action_mod(node),
+          executor: node_executor(node)
+        }
       end)
 
     component_hashes = MapSet.new(nodes, & &1.hash)
@@ -277,4 +283,10 @@ defmodule Jido.Runic.Introspection do
   defp node_type(%Runic.Workflow.Accumulator{}), do: :accumulator
   defp node_type(%Runic.Workflow.StateMachine{}), do: :state_machine
   defp node_type(_), do: :unknown
+
+  defp node_action_mod(%Jido.Runic.ActionNode{action_mod: mod}), do: mod
+  defp node_action_mod(_), do: nil
+
+  defp node_executor(%Jido.Runic.ActionNode{executor: exec}), do: exec
+  defp node_executor(_), do: nil
 end

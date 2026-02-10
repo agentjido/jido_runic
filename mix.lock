@@ -10,7 +10,7 @@
   "deep_merge": {:hex, :deep_merge, "1.0.0", "b4aa1a0d1acac393bdf38b2291af38cb1d4a52806cf7a4906f718e1feb5ee961", [:mix], [], "hexpm", "ce708e5f094b9cd4e8f2be4f00d2f4250c4095be93f8cd6d018c753894885430"},
   "dialyxir": {:hex, :dialyxir, "1.4.7", "dda948fcee52962e4b6c5b4b16b2d8fa7d50d8645bbae8b8685c3f9ecb7f5f4d", [:mix], [{:erlex, ">= 0.2.8", [hex: :erlex, repo: "hexpm", optional: false]}], "hexpm", "b34527202e6eb8cee198efec110996c25c5898f43a4094df157f8d28f27d9efe"},
   "doctor": {:hex, :doctor, "0.22.0", "223e1cace1f16a38eda4113a5c435fa9b10d804aa72d3d9f9a71c471cc958fe7", [:mix], [{:decimal, "~> 2.0", [hex: :decimal, repo: "hexpm", optional: false]}], "hexpm", "96e22cf8c0df2e9777dc55ebaa5798329b9028889c4023fed3305688d902cd5b"},
-  "dotenv_parser": {:hex, :dotenv_parser, "2.0.1", "7b2f02dd04f7f68458fe9942caf7de52a5dbada580fd87c722a8bed9f7fca0f2", [:mix], [], "hexpm", "f00780ad69e9089bd9b782e88d3e8110141dff0c54577b6c3735cef6925e4272"},
+  "dotenv": {:hex, :dotenv, "3.1.0", "d5a76bb17dc28acfb5236655bbe5776a1ffbdc8d3589fc992de0882b3ae4bc10", [:mix], [], "hexpm", "01bed84d21bedd8739aebad16489a3ce12d19c2d59af87377da65ebb361980d3"},
   "dotenvy": {:hex, :dotenvy, "1.1.1", "00e318f3c51de9fafc4b48598447e386f19204dc18ca69886905bb8f8b08b667", [:mix], [], "hexpm", "c8269471b5701e9e56dc86509c1199ded2b33dce088c3471afcfef7839766d8e"},
   "earmark_parser": {:hex, :earmark_parser, "1.4.44", "f20830dd6b5c77afe2b063777ddbbff09f9759396500cdbe7523efd58d7a339c", [:mix], [], "hexpm", "4778ac752b4701a5599215f7030989c989ffdc4f6df457c5f36938cc2d2a2750"},
   "erlex": {:hex, :erlex, "0.2.8", "cd8116f20f3c0afe376d1e8d1f0ae2452337729f68be016ea544a72f767d9c12", [:mix], [], "hexpm", "9d66ff9fedf69e49dc3fd12831e12a8a37b76f8651dd21cd45fcf5561a8a7590"},

@@ -8,6 +8,12 @@
 #
 # Run with: cd projects/jido_runic && mix run lib/examples/studio_step_demo.exs
 
+env_file = Path.expand("../../.env", __DIR__)
+
+if File.regular?(env_file) do
+  Dotenv.load!(env_file)
+end
+
 alias Jido.Runic.Examples.Studio.OrchestratorAgent
 alias Jido.Runic.Introspection
 

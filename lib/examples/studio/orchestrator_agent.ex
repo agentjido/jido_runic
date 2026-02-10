@@ -23,6 +23,10 @@ defmodule Jido.Runic.Examples.Studio.OrchestratorAgent do
     strategy: {Jido.Runic.Strategy, workflow_fn: &__MODULE__.build_workflow/0},
     schema: []
 
+  @doc false
+  @spec plugin_specs() :: [Jido.Plugin.Spec.t()]
+  def plugin_specs, do: []
+
   alias Jido.Runic.Introspection
   alias Jido.Agent.Strategy.State, as: StratState
   alias Runic.Workflow

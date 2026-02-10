@@ -245,12 +245,10 @@ defmodule Jido.Runic.Strategy do
 
           strat.status == :running && Workflow.is_runnable?(strat.workflow) ->
             {workflow, runnables} = Workflow.prepare_for_dispatch(strat.workflow)
-
-            new =
-              Enum.reject(runnables, &Map.has_key?(strat.pending, &1.id))
+            runnables = filter_new_runnables(strat, runnables)
 
             {directives, strat} =
-              dispatch_with_limit(new, %{strat | workflow: workflow})
+              dispatch_with_limit(runnables, %{strat | workflow: workflow})
 
             agent = StratState.put(agent, strat)
             {agent, directives}
@@ -334,6 +332,7 @@ defmodule Jido.Runic.Strategy do
 
     workflow = Workflow.plan_eagerly(strat.workflow, fact)
     {workflow, runnables} = Workflow.prepare_for_dispatch(workflow)
+    runnables = filter_new_runnables(strat, runnables)
 
     if strat.execution_mode == :step do
       held = strat.held_runnables ++ runnables
@@ -416,6 +415,7 @@ defmodule Jido.Runic.Strategy do
     workflow = Workflow.plan_eagerly(workflow)
 
     {workflow, new_runnables} = Workflow.prepare_for_dispatch(workflow)
+    new_runnables = filter_new_runnables(strat, new_runnables)
 
     genuinely_new =
       new_runnables
@@ -567,7 +567,14 @@ defmodule Jido.Runic.Strategy do
 
       {agent, [spawn_directive]}
     else
-      {agent, []}
+      error_signal =
+        Jido.Signal.new!(
+          "runic.child.missing",
+          %{tag: tag, runnable_id: runnable_id, executor: executor},
+          source: "/runic/delegator"
+        )
+
+      {agent, [%Jido.Agent.Directive.Emit{signal: error_signal}]}
     end
   end
 
@@ -665,6 +672,32 @@ defmodule Jido.Runic.Strategy do
       end)
 
     {directives, %{state | pending: pending, queued: state.queued ++ to_queue}}
+  end
+
+  defp filter_new_runnables(strat, runnables) do
+    pending_ids =
+      strat
+      |> Map.get(:pending, %{})
+      |> Map.keys()
+      |> MapSet.new()
+
+    queued_ids =
+      strat
+      |> Map.get(:queued, [])
+      |> Enum.map(& &1.id)
+      |> MapSet.new()
+
+    held_ids =
+      strat
+      |> Map.get(:held_runnables, [])
+      |> Enum.map(& &1.id)
+      |> MapSet.new()
+
+    Enum.reject(runnables, fn r ->
+      MapSet.member?(pending_ids, r.id) or
+        MapSet.member?(queued_ids, r.id) or
+        MapSet.member?(held_ids, r.id)
+    end)
   end
 
   defp build_directive(runnable) do
