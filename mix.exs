@@ -63,8 +63,8 @@ defmodule JidoRunic.MixProject do
   defp deps do
     [
       # Jido ecosystem
-      {:jido, path: "../jido", override: true},
-      {:jido_ai, path: "../jido_ai"},
+      {:jido, "~> 2.0.0-rc"},
+      {:jido_ai, github: "agentjido/jido_ai", branch: "main"},
 
       # Runic - DAG workflow composition
       {:runic, github: "zblanco/runic", branch: "zw/runnability-rework"},
