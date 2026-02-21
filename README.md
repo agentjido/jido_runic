@@ -190,3 +190,13 @@ Jido Action  ──→  ActionNode.new/3          ──→  Runic Workflow Node
 ## License
 
 Apache License 2.0 — See [LICENSE](LICENSE) for details.
+
+## Package Purpose
+
+`jido_runic` provides workflow graph planning/execution utilities used by higher-level Jido agents and orchestration packages.
+
+## Testing Paths
+
+- Unit/workflow tests: `mix test`
+- Full quality gate: `mix quality`
+- Coverage run: `mix test --cover`
