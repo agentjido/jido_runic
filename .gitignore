@@ -24,5 +24,8 @@ erl_crash.dump
 .DS_Store
 Thumbs.db
 
+# Local environment
+.env
+
 # Hex package artifacts
 jido_runic-*.tar
