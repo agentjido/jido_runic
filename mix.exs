@@ -64,7 +64,7 @@ defmodule JidoRunic.MixProject do
     [
       # Jido ecosystem
       {:jido, "~> 2.0.0-rc"},
-      {:jido_ai, github: "agentjido/jido_ai", branch: "main"},
+      {:jido_ai, "~> 2.0.0-rc.0"},
 
       # Runic - DAG workflow composition
       {:runic, github: "zblanco/runic", branch: "zw/runnability-rework"},

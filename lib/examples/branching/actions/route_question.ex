@@ -53,8 +53,6 @@ defmodule Jido.Runic.Examples.Branching.Actions.RouteQuestion do
            max_tokens: 220
          ) do
       {:ok, object} ->
-        object = if is_map(object), do: object, else: %{}
-
         {:ok,
          %{
            question: get_field(object, "question", :question, question),

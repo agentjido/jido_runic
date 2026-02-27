@@ -52,8 +52,6 @@ defmodule Jido.Runic.Examples.Branching.Actions.AnalysisPlan do
            max_tokens: 320
          ) do
       {:ok, object} ->
-        object = if is_map(object), do: object, else: %{}
-
         analysis_plan =
           object
           |> get_field("analysis_plan", :analysis_plan, [])
