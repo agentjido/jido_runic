@@ -56,6 +56,7 @@ defmodule Jido.Runic.ActionNodeTest do
   alias Jido.Runic.ActionNode
   alias Runic.Workflow
   alias Runic.Workflow.Fact
+  alias Runic.Workflow.Events.{ActivationConsumed, FactProduced}
 
   alias Jido.RunicTest.Actions.{Add, Double, Fail, NoSchema}
 
@@ -310,7 +311,7 @@ defmodule Jido.Runic.ActionNodeTest do
       assert executed.error != nil
     end
 
-    test "apply_fn reduces result back into workflow" do
+    test "events reduce result back into workflow" do
       node = ActionNode.new(Add, %{amount: 1}, name: :add)
 
       workflow =
@@ -321,9 +322,21 @@ defmodule Jido.Runic.ActionNodeTest do
 
       {:ok, runnable} = Runic.Workflow.Invokable.prepare(node, workflow, fact)
       executed = Runic.Workflow.Invokable.execute(node, runnable)
+      fact_hash = fact.hash
+      node_hash = node.hash
 
       assert executed.status == :completed
-      updated_workflow = executed.apply_fn.(workflow)
+
+      assert [
+               %FactProduced{value: %{value: 6}, producer_label: :produced},
+               %ActivationConsumed{
+                 fact_hash: ^fact_hash,
+                 node_hash: ^node_hash,
+                 from_label: :runnable
+               }
+             ] = executed.events
+
+      updated_workflow = Workflow.apply_runnable(workflow, executed)
       assert %Workflow{} = updated_workflow
     end
   end

@@ -3,6 +3,12 @@ defmodule Jido.Runic.Examples.Branching.Actions.TrueBranch do
   Produce branch output when the structured decision is true.
   """
 
+  @output_schema [
+    branch: [type: :atom, required: true],
+    branch_result: [type: :string, required: true],
+    explanation: [type: :string, required: true]
+  ]
+
   use Jido.Action,
     name: "branching_true_branch",
     description: "Runs when the LLM decision is true",
@@ -11,7 +17,8 @@ defmodule Jido.Runic.Examples.Branching.Actions.TrueBranch do
       is_true: [type: :boolean, required: true],
       confidence: [type: :float, required: true],
       reasoning: [type: :string, required: true]
-    ]
+    ],
+    output_schema: @output_schema
 
   @impl true
   def run(%{question: question, is_true: true, confidence: confidence, reasoning: reasoning}, _context) do

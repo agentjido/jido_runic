@@ -1,13 +1,19 @@
 defmodule Jido.Runic.Examples.Studio.Actions.EditAndAssemble do
   @moduledoc "Polish and finalize a draft article into publication-ready markdown."
 
+  @output_schema [
+    markdown: [type: :string, required: true],
+    quality_score: [type: :float, required: true]
+  ]
+
   use Jido.Action,
     name: "studio_edit_and_assemble",
     description: "Edits and polishes the draft into a final article",
     schema: [
       topic: [type: :string, required: true],
       draft_markdown: [type: :string, required: true]
-    ]
+    ],
+    output_schema: @output_schema
 
   alias Jido.Runic.Examples.Studio.Actions.Helpers
 

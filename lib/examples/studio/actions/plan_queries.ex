@@ -1,20 +1,21 @@
 defmodule Jido.Runic.Examples.Studio.Actions.PlanQueries do
   @moduledoc "Generate search queries and an outline seed from a topic."
 
-  use Jido.Action,
-    name: "studio_plan_queries",
-    description: "Plans research queries for a topic",
-    schema: [
-      topic: [type: :string, required: true]
-    ]
-
-  alias Jido.Runic.Examples.Studio.Actions.Helpers
-
   @output_schema [
     topic: [type: :string, required: true],
     queries: [type: {:list, :string}, required: true],
     outline_seed: [type: {:list, :string}, required: true]
   ]
+
+  use Jido.Action,
+    name: "studio_plan_queries",
+    description: "Plans research queries for a topic",
+    schema: [
+      topic: [type: :string, required: true]
+    ],
+    output_schema: @output_schema
+
+  alias Jido.Runic.Examples.Studio.Actions.Helpers
 
   @impl true
   def run(%{topic: topic}, _context) do

@@ -10,6 +10,7 @@ defmodule Jido.RunicTest.DelegatingOrchestratorTest do
   alias Jido.Agent.Strategy.State, as: StratState
   alias Runic.Workflow
   alias Runic.Workflow.{Fact, Runnable}
+  alias Runic.Workflow.Events.{ActivationConsumed, FactProduced}
 
   # -- Helpers -----------------------------------------------------------------
 
@@ -60,15 +61,18 @@ defmodule Jido.RunicTest.DelegatingOrchestratorTest do
     fact = runnable.input_fact
     result_fact = Fact.new(value: result_value, ancestry: {node.hash, fact.hash})
 
-    apply_fn = fn workflow ->
-      workflow
-      |> Workflow.log_fact(result_fact)
-      |> Workflow.draw_connection(node, result_fact, :produced)
-      |> Workflow.prepare_next_runnables(node, result_fact)
-      |> Workflow.mark_runnable_as_ran(node, fact)
-    end
+    events = [
+      %FactProduced{
+        hash: result_fact.hash,
+        value: result_fact.value,
+        ancestry: result_fact.ancestry,
+        producer_label: :produced,
+        weight: 1
+      },
+      %ActivationConsumed{fact_hash: fact.hash, node_hash: node.hash, from_label: :runnable}
+    ]
 
-    Runnable.complete(runnable, result_fact, apply_fn)
+    Runnable.complete(runnable, result_fact, events)
   end
 
   defp simulate_runnable_completion(runnable, result_value) do
@@ -76,15 +80,18 @@ defmodule Jido.RunicTest.DelegatingOrchestratorTest do
     fact = runnable.input_fact
     result_fact = Fact.new(value: result_value, ancestry: {node.hash, fact.hash})
 
-    apply_fn = fn workflow ->
-      workflow
-      |> Workflow.log_fact(result_fact)
-      |> Workflow.draw_connection(node, result_fact, :produced)
-      |> Workflow.prepare_next_runnables(node, result_fact)
-      |> Workflow.mark_runnable_as_ran(node, fact)
-    end
+    events = [
+      %FactProduced{
+        hash: result_fact.hash,
+        value: result_fact.value,
+        ancestry: result_fact.ancestry,
+        producer_label: :produced,
+        weight: 1
+      },
+      %ActivationConsumed{fact_hash: fact.hash, node_hash: node.hash, from_label: :runnable}
+    ]
 
-    Runnable.complete(runnable, result_fact, apply_fn)
+    Runnable.complete(runnable, result_fact, events)
   end
 
   # -- Workflow Construction Tests ---------------------------------------------

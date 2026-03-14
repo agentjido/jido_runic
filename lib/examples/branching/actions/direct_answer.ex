@@ -3,6 +3,13 @@ defmodule Jido.Runic.Examples.Branching.Actions.DirectAnswer do
   Generate a concise answer for questions routed to the direct path.
   """
 
+  @output_schema [
+    branch: [type: :atom, required: true],
+    branch_result: [type: :string, required: true],
+    explanation: [type: :string, required: true],
+    route_confidence: [type: :float, required: true]
+  ]
+
   use Jido.Action,
     name: "branching_direct_answer",
     description: "Fast direct-answer branch",
@@ -12,7 +19,8 @@ defmodule Jido.Runic.Examples.Branching.Actions.DirectAnswer do
       detail_level: [type: :atom, required: true],
       confidence: [type: :float, required: true],
       reasoning: [type: :string, required: true]
-    ]
+    ],
+    output_schema: @output_schema
 
   alias Jido.Runic.Examples.Studio.Actions.Helpers
 

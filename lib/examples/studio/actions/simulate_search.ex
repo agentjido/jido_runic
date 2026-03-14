@@ -1,13 +1,19 @@
 defmodule Jido.Runic.Examples.Studio.Actions.SimulateSearch do
   @moduledoc "Simulate web research by asking the LLM to generate a research summary."
 
+  @output_schema [
+    topic: [type: :string, required: true],
+    research_summary: [type: :string, required: true]
+  ]
+
   use Jido.Action,
     name: "studio_simulate_search",
     description: "Simulates web search by generating research findings via LLM",
     schema: [
       topic: [type: :string, required: true],
       queries: [type: :any, required: true]
-    ]
+    ],
+    output_schema: @output_schema
 
   alias Jido.Runic.Examples.Studio.Actions.Helpers
 

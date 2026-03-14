@@ -3,6 +3,12 @@ defmodule Jido.Runic.Examples.Branching.Actions.AnalysisPlan do
   Build a structured analysis plan for questions routed to deeper reasoning.
   """
 
+  @output_schema [
+    question: [type: :string, required: true],
+    analysis_plan: [type: {:list, :string}, required: true],
+    key_risks: [type: {:list, :string}, required: true]
+  ]
+
   use Jido.Action,
     name: "branching_analysis_plan",
     description: "Generates a structured analysis plan",
@@ -12,15 +18,10 @@ defmodule Jido.Runic.Examples.Branching.Actions.AnalysisPlan do
       detail_level: [type: :atom, required: true],
       confidence: [type: :float, required: true],
       reasoning: [type: :string, required: true]
-    ]
+    ],
+    output_schema: @output_schema
 
   alias Jido.Runic.Examples.Studio.Actions.Helpers
-
-  @output_schema [
-    question: [type: :string, required: true],
-    analysis_plan: [type: {:list, :string}, required: true],
-    key_risks: [type: {:list, :string}, required: true]
-  ]
 
   @impl true
   def run(

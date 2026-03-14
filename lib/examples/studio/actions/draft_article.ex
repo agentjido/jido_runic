@@ -1,13 +1,19 @@
 defmodule Jido.Runic.Examples.Studio.Actions.DraftArticle do
   @moduledoc "Draft a full article from an outline."
 
+  @output_schema [
+    topic: [type: :string, required: true],
+    draft_markdown: [type: :string, required: true]
+  ]
+
   use Jido.Action,
     name: "studio_draft_article",
     description: "Drafts the full article from an outline",
     schema: [
       topic: [type: :string, required: true],
       outline: [type: :any, required: true]
-    ]
+    ],
+    output_schema: @output_schema
 
   alias Jido.Runic.Examples.Studio.Actions.Helpers
 
