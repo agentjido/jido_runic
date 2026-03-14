@@ -3,15 +3,6 @@ defmodule Jido.Runic.Examples.Branching.Actions.RouteQuestion do
   Route an incoming question into a workflow branch using structured LLM output.
   """
 
-  use Jido.Action,
-    name: "branching_route_question",
-    description: "Classifies a question into a routing branch",
-    schema: [
-      question: [type: :string, required: true]
-    ]
-
-  alias Jido.Runic.Examples.Studio.Actions.Helpers
-
   @routes ["direct", "analysis", "safe"]
   @detail_levels ["brief", "detailed"]
 
@@ -22,6 +13,16 @@ defmodule Jido.Runic.Examples.Branching.Actions.RouteQuestion do
     confidence: [type: :float, required: true],
     reasoning: [type: :string, required: true]
   ]
+
+  use Jido.Action,
+    name: "branching_route_question",
+    description: "Classifies a question into a routing branch",
+    schema: [
+      question: [type: :string, required: true]
+    ],
+    output_schema: @output_schema
+
+  alias Jido.Runic.Examples.Studio.Actions.Helpers
 
   @impl true
   def run(%{question: question}, _context) do

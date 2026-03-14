@@ -3,6 +3,15 @@ defmodule Jido.Runic.Examples.Branching.Actions.AnalysisAnswer do
   Produce a deeper synthesized answer from an analysis plan.
   """
 
+  @output_schema [
+    branch: [type: :atom, required: true],
+    branch_result: [type: :string, required: true],
+    explanation: [type: :string, required: true],
+    route_confidence: [type: :float, required: true],
+    analysis_plan: [type: :any, required: true],
+    key_risks: [type: :any, required: true]
+  ]
+
   use Jido.Action,
     name: "branching_analysis_answer",
     description: "Synthesizes a deep answer from planned analysis",
@@ -14,7 +23,8 @@ defmodule Jido.Runic.Examples.Branching.Actions.AnalysisAnswer do
       reasoning: [type: :string, required: true],
       analysis_plan: [type: :any, required: true],
       key_risks: [type: :any, required: true]
-    ]
+    ],
+    output_schema: @output_schema
 
   alias Jido.Runic.Examples.Studio.Actions.Helpers
 

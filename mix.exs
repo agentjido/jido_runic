@@ -67,8 +67,8 @@ defmodule JidoRunic.MixProject do
       {:jido_ai, "~> 2.0.0-rc.0"},
 
       # Runic - DAG workflow composition
-      {:runic, github: "zblanco/runic", branch: "zw/runnability-rework"},
-      {:libgraph, github: "zblanco/libgraph", branch: "zw/multigraph-indexes", override: true},
+      {:runic, "~> 0.1.0-alpha.4"},
+      {:libgraph, "~> 0.16.1-mg.1", hex: :multigraph, override: true},
 
       # Runtime deps
       {:zoi, "~> 0.16"},

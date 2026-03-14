@@ -72,7 +72,7 @@ defmodule Jido.RunicTest.RunnableExecutionTest do
 
     test "skipped runnable produces completed signal type" do
       runnable = build_runnable(Add, %{amount: 1}, %{value: 5})
-      skipped = Runnable.skip(runnable, fn workflow -> workflow end)
+      skipped = Runnable.skip(runnable, [])
       signal = RunnableExecution.completion_signal(skipped)
       assert signal.type == "runic.runnable.completed"
     end

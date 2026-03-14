@@ -1,20 +1,21 @@
 defmodule Jido.Runic.Examples.Studio.Actions.BuildOutline do
   @moduledoc "Build a structured article outline from research findings."
 
+  @output_schema [
+    topic: [type: :string, required: true],
+    outline: [type: {:list, :string}, required: true]
+  ]
+
   use Jido.Action,
     name: "studio_build_outline",
     description: "Builds an article outline from research summary",
     schema: [
       topic: [type: :string, required: true],
       research_summary: [type: :string, required: true]
-    ]
+    ],
+    output_schema: @output_schema
 
   alias Jido.Runic.Examples.Studio.Actions.Helpers
-
-  @output_schema [
-    topic: [type: :string, required: true],
-    outline: [type: {:list, :string}, required: true]
-  ]
 
   @impl true
   def run(%{topic: topic, research_summary: research_summary}, _context) do

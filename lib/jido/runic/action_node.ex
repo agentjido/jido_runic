@@ -36,7 +36,7 @@ defmodule Jido.Runic.ActionNode do
   2. **Execute** — Merges the fact's value into the node's params and calls
      `Jido.Exec.run/4`. Timeout defaults to `0` (inline execution) so that
      Runic's scheduler owns concurrency and timeout control.
-  3. **Apply** — The `apply_fn` on the completed Runnable reduces the result fact
+  3. **Apply** — The completed Runnable carries Runic events that are folded
      back into the workflow graph.
   """
 
@@ -157,6 +157,7 @@ end
 defimpl Runic.Workflow.Invokable, for: Jido.Runic.ActionNode do
   alias Runic.Workflow
   alias Runic.Workflow.{Fact, Runnable, CausalContext, HookRunner}
+  alias Runic.Workflow.Events.{ActivationConsumed, FactProduced, MapReduceTracked}
 
   @doc """
   ActionNode is an execute node — it produces facts (not a gate/predicate).
@@ -176,12 +177,15 @@ defimpl Runic.Workflow.Invokable, for: Jido.Runic.ActionNode do
   Phase 1: Extract minimal context from workflow into a Runnable.
   """
   def prepare(%Jido.Runic.ActionNode{} = node, workflow, fact) do
+    fan_out_context = build_fan_out_context(workflow, node, fact)
+
     context =
       CausalContext.new(
         node_hash: node.hash,
         input_fact: fact,
         ancestry_depth: Workflow.ancestry_depth(workflow, fact),
-        hooks: Workflow.get_hooks(workflow, node.hash)
+        hooks: Workflow.get_hooks(workflow, node.hash),
+        fan_out_context: fan_out_context
       )
 
     {:ok, Runnable.new(node, fact, context)}
@@ -201,17 +205,9 @@ defimpl Runic.Workflow.Invokable, for: Jido.Runic.ActionNode do
 
           case HookRunner.run_after(ctx, node, fact, result_fact) do
             {:ok, after_apply_fns} ->
-              apply_fn = fn workflow ->
-                workflow
-                |> Workflow.apply_hook_fns(before_apply_fns)
-                |> Workflow.log_fact(result_fact)
-                |> Workflow.draw_connection(node, result_fact, :produced)
-                |> Workflow.apply_hook_fns(after_apply_fns)
-                |> Workflow.prepare_next_runnables(node, result_fact)
-                |> Workflow.mark_runnable_as_ran(node, fact)
-              end
-
-              Runnable.complete(runnable, result_fact, apply_fn)
+              events = build_events(node, fact, result_fact, ctx)
+              hook_fns = before_apply_fns ++ after_apply_fns
+              Runnable.complete(runnable, result_fact, events, hook_fns)
 
             {:error, reason} ->
               Runnable.fail(runnable, {:hook_error, reason})
@@ -223,17 +219,9 @@ defimpl Runic.Workflow.Invokable, for: Jido.Runic.ActionNode do
 
           case HookRunner.run_after(ctx, node, fact, result_fact) do
             {:ok, after_apply_fns} ->
-              apply_fn = fn workflow ->
-                workflow
-                |> Workflow.apply_hook_fns(before_apply_fns)
-                |> Workflow.log_fact(result_fact)
-                |> Workflow.draw_connection(node, result_fact, :produced)
-                |> Workflow.apply_hook_fns(after_apply_fns)
-                |> Workflow.prepare_next_runnables(node, result_fact)
-                |> Workflow.mark_runnable_as_ran(node, fact)
-              end
-
-              Runnable.complete(runnable, result_fact, apply_fn)
+              events = build_events(node, fact, result_fact, ctx)
+              hook_fns = before_apply_fns ++ after_apply_fns
+              Runnable.complete(runnable, result_fact, events, hook_fns)
 
             {:error, reason} ->
               Runnable.fail(runnable, {:hook_error, reason})
@@ -250,6 +238,108 @@ defimpl Runic.Workflow.Invokable, for: Jido.Runic.ActionNode do
 
   defp to_params(value) when is_map(value), do: value
   defp to_params(value), do: %{input: value}
+
+  defp build_events(node, input_fact, result_fact, ctx) do
+    events = [
+      %FactProduced{
+        hash: result_fact.hash,
+        value: result_fact.value,
+        ancestry: result_fact.ancestry,
+        producer_label: :produced,
+        weight: ctx.ancestry_depth + 1
+      },
+      %ActivationConsumed{
+        fact_hash: input_fact.hash,
+        node_hash: node.hash,
+        from_label: :runnable
+      }
+    ]
+
+    case ctx.fan_out_context do
+      %{is_reduced: true, source_fact_hash: sfh, fan_out_hash: foh, fan_out_fact_hash: fofh} ->
+        events ++
+          [
+            %MapReduceTracked{
+              source_fact_hash: sfh,
+              fan_out_hash: foh,
+              fan_out_fact_hash: fofh,
+              step_hash: node.hash,
+              result_fact_hash: result_fact.hash
+            }
+          ]
+
+      _ ->
+        events
+    end
+  end
+
+  defp build_fan_out_context(workflow, node, fact) do
+    if is_reduced_in_map?(workflow, node) do
+      case find_fan_out_info_from_input(workflow, fact) do
+        {source_fact_hash, fan_out_hash, fan_out_fact_hash} ->
+          %{
+            is_reduced: true,
+            source_fact_hash: source_fact_hash,
+            fan_out_hash: fan_out_hash,
+            fan_out_fact_hash: fan_out_fact_hash
+          }
+
+        nil ->
+          nil
+      end
+    else
+      nil
+    end
+  end
+
+  defp find_fan_out_info_from_input(
+         workflow,
+         %Fact{ancestry: {producer_hash, parent_fact_hash}} = fact
+       ) do
+    producer = workflow.graph.vertices[producer_hash]
+
+    case producer do
+      %Runic.Workflow.FanOut{} = fan_out ->
+        {parent_fact_hash, fan_out.hash, fact.hash}
+
+      _ ->
+        find_fan_out_info(workflow, fact)
+    end
+  end
+
+  defp find_fan_out_info_from_input(_workflow, _fact), do: nil
+
+  defp is_reduced_in_map?(workflow, node) do
+    MapSet.member?(workflow.mapped.mapped_paths, node.hash)
+  end
+
+  defp find_fan_out_info(workflow, %Fact{ancestry: {_producer_hash, input_fact_hash}}) do
+    do_find_fan_out_info(workflow, input_fact_hash)
+  end
+
+  defp find_fan_out_info(_workflow, _fact), do: nil
+
+  defp do_find_fan_out_info(_workflow, nil), do: nil
+
+  defp do_find_fan_out_info(workflow, fact_hash) do
+    fact = workflow.graph.vertices[fact_hash]
+
+    case fact do
+      %Fact{ancestry: {producer_hash, parent_fact_hash}} ->
+        producer = workflow.graph.vertices[producer_hash]
+
+        case producer do
+          %Runic.Workflow.FanOut{} = fan_out ->
+            {parent_fact_hash, fan_out.hash, fact_hash}
+
+          _ ->
+            do_find_fan_out_info(workflow, parent_fact_hash)
+        end
+
+      _ ->
+        nil
+    end
+  end
 end
 
 defimpl Runic.Component, for: Jido.Runic.ActionNode do

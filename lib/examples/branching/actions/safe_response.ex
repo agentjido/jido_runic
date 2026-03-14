@@ -3,6 +3,13 @@ defmodule Jido.Runic.Examples.Branching.Actions.SafeResponse do
   Produce a safe fallback response when the router flags sensitive requests.
   """
 
+  @output_schema [
+    branch: [type: :atom, required: true],
+    branch_result: [type: :string, required: true],
+    explanation: [type: :string, required: true],
+    route_confidence: [type: :float, required: true]
+  ]
+
   use Jido.Action,
     name: "branching_safe_response",
     description: "Safe fallback branch for sensitive questions",
@@ -12,7 +19,8 @@ defmodule Jido.Runic.Examples.Branching.Actions.SafeResponse do
       detail_level: [type: :atom, required: true],
       confidence: [type: :float, required: true],
       reasoning: [type: :string, required: true]
-    ]
+    ],
+    output_schema: @output_schema
 
   @impl true
   def run(%{question: question, route: :safe, confidence: confidence, reasoning: reasoning}, _context) do

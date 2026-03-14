@@ -3,21 +3,22 @@ defmodule Jido.Runic.Examples.Branching.Actions.DecideTruth do
   Ask the LLM for a structured boolean decision on an input statement.
   """
 
-  use Jido.Action,
-    name: "branching_decide_truth",
-    description: "Returns a structured true/false decision for a statement",
-    schema: [
-      question: [type: :string, required: true]
-    ]
-
-  alias Jido.Runic.Examples.Studio.Actions.Helpers
-
   @output_schema [
     question: [type: :string, required: true],
     is_true: [type: :boolean, required: true],
     confidence: [type: :float, required: true],
     reasoning: [type: :string, required: true]
   ]
+
+  use Jido.Action,
+    name: "branching_decide_truth",
+    description: "Returns a structured true/false decision for a statement",
+    schema: [
+      question: [type: :string, required: true]
+    ],
+    output_schema: @output_schema
+
+  alias Jido.Runic.Examples.Studio.Actions.Helpers
 
   @impl true
   def run(%{question: question}, _context) do
