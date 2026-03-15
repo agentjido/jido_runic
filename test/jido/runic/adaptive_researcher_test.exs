@@ -59,9 +59,13 @@ defmodule Jido.RunicTest.AdaptiveResearcherTest do
         value: result_fact.value,
         ancestry: result_fact.ancestry,
         producer_label: :produced,
-        weight: 1
+        weight: runnable.context.ancestry_depth + 1
       },
-      %ActivationConsumed{fact_hash: fact.hash, node_hash: node.hash, from_label: :runnable}
+      %ActivationConsumed{
+        fact_hash: fact.hash,
+        node_hash: node.hash,
+        from_label: :runnable
+      }
     ]
 
     Runnable.complete(runnable, result_fact, events)

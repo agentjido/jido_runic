@@ -1,6 +1,6 @@
 {
   "skip_files": [
-    "lib/examples",
+    "examples",
     "test/support",
     "lib/jido/runic/directive/execute_runnable_exec.ex"
   ],

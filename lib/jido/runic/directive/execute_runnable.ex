@@ -7,8 +7,8 @@ defmodule Jido.Runic.Directive.ExecuteRunnable do
   runnable via `Invokable.execute/2` and sends the result back
   as a completion signal.
 
-  The executed Runnable carries Runic runtime events —
-  the strategy folds them back into the workflow via
+  The executed Runnable carries Runic event structs plus any deferred hook
+  reducers. The strategy applies it back to the workflow via
   `Workflow.apply_runnable/2`. No manual graph manipulation needed.
   """
 

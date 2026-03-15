@@ -4,6 +4,7 @@ defmodule Jido.RunicTest.RunnableExecutionTest do
   alias Jido.Runic.{ActionNode, RunnableExecution}
   alias Runic.Workflow
   alias Runic.Workflow.{Fact, Invokable, Runnable, CausalContext}
+  alias Runic.Workflow.Events.ActivationConsumed
 
   alias Jido.RunicTest.Actions.{Add, Fail}
   alias Jido.RunicTest.Nodes.{RaisingNode, ThrowingNode}
@@ -72,7 +73,16 @@ defmodule Jido.RunicTest.RunnableExecutionTest do
 
     test "skipped runnable produces completed signal type" do
       runnable = build_runnable(Add, %{amount: 1}, %{value: 5})
-      skipped = Runnable.skip(runnable, [])
+
+      skipped =
+        Runnable.skip(runnable, [
+          %ActivationConsumed{
+            fact_hash: runnable.input_fact.hash,
+            node_hash: runnable.node.hash,
+            from_label: :runnable
+          }
+        ])
+
       signal = RunnableExecution.completion_signal(skipped)
       assert signal.type == "runic.runnable.completed"
     end

@@ -2,7 +2,7 @@
 
 [![Hex.pm](https://img.shields.io/hexpm/v/jido_runic.svg)](https://hex.pm/packages/jido_runic)
 [![Docs](https://img.shields.io/badge/docs-hexpm-blue.svg)](https://hexdocs.pm/jido_runic)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/agentjido/jido_runic/blob/main/LICENSE)
 
 Bridge between [Runic's](https://github.com/zblanco/runic) DAG-based workflow engine and [Jido's](https://github.com/agentjido/jido) signal-driven agent framework.
 
@@ -154,14 +154,14 @@ end)
 
 ## AI Research Studio Example
 
-The `lib/examples/studio/` directory contains a full showcase: a six-stage research pipeline (plan → search → extract → outline → draft → edit) built entirely with ActionNodes and Runic workflows.
+The root [examples](https://github.com/agentjido/jido_runic/tree/main/examples) directory contains a full showcase: a six-stage research pipeline (plan → search → extract → outline → draft → edit) built entirely with ActionNodes and Runic workflows. These examples are compiled only for local `dev`/`test` work and are not part of the published library runtime.
 
 ```bash
 # Run with mock fixtures
-cd projects/jido_runic && mix run lib/examples/studio_demo.exs
+cd projects/jido_runic && mix run examples/studio_demo.exs
 
 # Run with live LLM calls (requires ANTHROPIC_API_KEY in .env)
-STUDIO_LIVE=1 mix run lib/examples/studio_demo.exs
+STUDIO_LIVE=1 mix run examples/studio_demo.exs
 ```
 
 ## Architecture
@@ -189,7 +189,7 @@ Jido Action  ──→  ActionNode.new/3          ──→  Runic Workflow Node
 
 ## License
 
-Apache License 2.0 — See [LICENSE](LICENSE) for details.
+Apache License 2.0 — See [LICENSE](https://github.com/agentjido/jido_runic/blob/main/LICENSE) for details.
 
 ## Package Purpose
 

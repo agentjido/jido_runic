@@ -36,8 +36,8 @@ defmodule Jido.Runic.ActionNode do
   2. **Execute** — Merges the fact's value into the node's params and calls
      `Jido.Exec.run/4`. Timeout defaults to `0` (inline execution) so that
      Runic's scheduler owns concurrency and timeout control.
-  3. **Apply** — The completed Runnable carries Runic events that are folded
-     back into the workflow graph.
+  3. **Apply** — The completed Runnable carries event structs and deferred hook
+     reducers that `Runic.Workflow.apply_runnable/2` folds back into the graph.
   """
 
   alias Runic.Workflow.Components
@@ -193,7 +193,8 @@ defimpl Runic.Workflow.Invokable, for: Jido.Runic.ActionNode do
 
   @doc """
   Phase 2: Execute the Jido Action via Jido.Exec.run/4.
-  No workflow access — safe for parallel dispatch.
+  No workflow access — safe for parallel dispatch. The returned runnable carries
+  event structs plus deferred hook reducers for Runic's apply phase.
   """
   def execute(%Jido.Runic.ActionNode{} = node, %Runnable{input_fact: fact, context: ctx} = runnable) do
     with {:ok, before_apply_fns} <- HookRunner.run_before(ctx, node, fact) do
@@ -316,8 +317,6 @@ defimpl Runic.Workflow.Invokable, for: Jido.Runic.ActionNode do
   defp find_fan_out_info(workflow, %Fact{ancestry: {_producer_hash, input_fact_hash}}) do
     do_find_fan_out_info(workflow, input_fact_hash)
   end
-
-  defp find_fan_out_info(_workflow, _fact), do: nil
 
   defp do_find_fan_out_info(_workflow, nil), do: nil
 

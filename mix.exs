@@ -57,42 +57,36 @@ defmodule JidoRunic.MixProject do
     ]
   end
 
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(:dev), do: ["lib", "examples"]
+  defp elixirc_paths(:test), do: ["lib", "examples", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
   defp deps do
     [
       # Jido ecosystem
-      {:jido, "~> 2.0.0-rc"},
-      {:jido_ai, "~> 2.0.0-rc.0"},
+      {:jido, "~> 2.1"},
+      {:jido_ai, "~> 2.0.0-rc.0", only: [:dev, :test]},
 
       # Runic - DAG workflow composition
       {:runic, "~> 0.1.0-alpha.4"},
-      {:libgraph, "~> 0.16.1-mg.1", hex: :multigraph, override: true},
+      {:libgraph, "~> 0.16.1-mg.1", hex: :multigraph},
 
       # Runtime deps
       {:zoi, "~> 0.16"},
-      {:splode, "~> 0.3.0"},
-      {:jason, "~> 1.4"},
-      {:uniq, "~> 0.6"},
 
       # Dev/Test
-      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.7.17", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.31", only: :dev, runtime: false},
       {:doctor, "~> 0.21", only: :dev, runtime: false},
       {:excoveralls, "~> 0.18", only: [:dev, :test]},
-      {:git_hooks, "~> 0.8", only: [:dev, :test], runtime: false},
-      {:git_ops, "~> 2.9", only: :dev, runtime: false},
-      {:stream_data, "~> 1.0", only: [:dev, :test]},
-      {:mimic, "~> 2.0", only: :test},
       {:dotenv, "~> 3.1", only: [:dev, :test]}
     ]
   end
 
   defp aliases do
     [
-      setup: ["deps.get", "git_hooks.install"],
+      setup: ["deps.get"],
       test: "test --exclude flaky",
       q: ["quality"],
       quality: [
@@ -107,11 +101,10 @@ defmodule JidoRunic.MixProject do
 
   defp package do
     [
-      files: ["lib", "mix.exs", "README.md", "LICENSE", "CHANGELOG.md", "usage-rules.md"],
+      files: ["lib", "examples", "mix.exs", "README.md", "CONTRIBUTING.md", "LICENSE"],
       maintainers: ["Mike Hostetler"],
       licenses: ["Apache-2.0"],
       links: %{
-        "Changelog" => "https://hexdocs.pm/jido_runic/changelog.html",
         "Discord" => "https://agentjido.xyz/discord",
         "Documentation" => "https://hexdocs.pm/jido_runic",
         "GitHub" => @source_url,
@@ -126,7 +119,6 @@ defmodule JidoRunic.MixProject do
       source_ref: "v#{@version}",
       extras: [
         "README.md",
-        "CHANGELOG.md",
         "CONTRIBUTING.md"
       ]
     ]

@@ -15,9 +15,9 @@
 #   3. EditAndAssemble is delegated — spawns EditorAgent child, sends work, receives result
 #   4. Workflow completes with final article
 #
-# Run with: cd projects/jido_runic && mix run lib/examples/delegating_demo.exs
+# Run with: cd projects/jido_runic && mix run examples/delegating_demo.exs
 
-env_file = Path.expand("../../.env", __DIR__)
+env_file = Path.expand("../.env", __DIR__)
 
 if File.regular?(env_file) do
   Dotenv.load!(env_file)
