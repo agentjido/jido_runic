@@ -8,6 +8,11 @@ on:
         required: false
         type: boolean
         default: true
+      hex_dry_run:
+        description: "Hex dry run only (run all git/release steps, but skip actual Hex publish)"
+        required: false
+        type: boolean
+        default: false
       skip_tests:
         description: "Skip tests before release"
         required: false
@@ -20,64 +25,11 @@ permissions:
 jobs:
   release:
     name: Release
-    runs-on: ubuntu-latest
-    env:
-      MIX_ENV: dev
-      HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Elixir
-        uses: erlef/setup-beam@v1
-        with:
-          otp-version: "28"
-          elixir-version: "1.19"
-
-      - name: Install Hex and Rebar
-        run: |
-          mix local.hex --force
-          mix local.rebar --force
-
-      - name: Install dependencies
-        run: mix deps.get
-
-      - name: Compile
-        run: mix compile --warnings-as-errors
-
-      - name: Test
-        if: ${{ !inputs.skip_tests }}
-        run: mix test
-
-      - name: Determine version
-        run: echo "VERSION=$(mix run -e 'IO.write(Mix.Project.config()[:version])')" >> "$GITHUB_ENV"
-
-      - name: Hex dry run
-        if: ${{ inputs.dry_run }}
-        run: mix hex.publish --dry-run --yes
-
-      - name: Ensure release tag does not exist
-        if: ${{ !inputs.dry_run }}
-        run: |
-          if git rev-parse "v${VERSION}" >/dev/null 2>&1; then
-            echo "Tag v${VERSION} already exists"
-            exit 1
-          fi
-
-      - name: Publish to Hex
-        if: ${{ !inputs.dry_run }}
-        run: mix hex.publish --yes
-
-      - name: Create git tag
-        if: ${{ !inputs.dry_run }}
-        run: |
-          git tag "v${VERSION}"
-          git push origin "v${VERSION}"
-
-      - name: Create GitHub release
-        if: ${{ !inputs.dry_run }}
-        run: gh release create "v${VERSION}" --generate-notes
+    uses: agentjido/github-actions/.github/workflows/elixir-release.yml@v3
+    with:
+      otp_version: "28"
+      elixir_version: "1.19"
+      dry_run: ${{ inputs.dry_run }}
+      hex_dry_run: ${{ inputs.hex_dry_run }}
+      skip_tests: ${{ inputs.skip_tests }}
+    secrets: inherit
