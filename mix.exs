@@ -69,7 +69,7 @@ defmodule JidoRunic.MixProject do
 
       # Runic - DAG workflow composition
       {:runic, "~> 0.1.0-alpha.4"},
-      {:libgraph, "~> 0.16.1-mg.1", hex: :multigraph},
+      {:multigraph, "~> 0.16.1-mg.1"},
 
       # Runtime deps
       {:zoi, "~> 0.16"},

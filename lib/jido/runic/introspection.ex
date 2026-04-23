@@ -171,7 +171,7 @@ defmodule Jido.Runic.Introspection do
 
     edges =
       workflow.graph
-      |> Graph.edges()
+      |> Multigraph.edges()
       |> Enum.filter(fn edge ->
         from_hash = node_hash(edge.v1)
         to_hash = node_hash(edge.v2)
