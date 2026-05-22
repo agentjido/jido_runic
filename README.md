@@ -1,8 +1,12 @@
 # JidoRunic
 
 [![Hex.pm](https://img.shields.io/hexpm/v/jido_runic.svg)](https://hex.pm/packages/jido_runic)
-[![Docs](https://img.shields.io/badge/docs-hexpm-blue.svg)](https://hexdocs.pm/jido_runic)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/agentjido/jido_runic/blob/main/LICENSE)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/jido_runic/)
+[![CI](https://github.com/agentjido/jido_runic/actions/workflows/ci.yml/badge.svg)](https://github.com/agentjido/jido_runic/actions/workflows/ci.yml)
+[![License](https://img.shields.io/hexpm/l/jido_runic.svg)](https://github.com/agentjido/jido_runic/blob/main/LICENSE)
+[![Website](https://img.shields.io/badge/website-jido.run-0f172a.svg)](https://jido.run)
+[![Ecosystem](https://img.shields.io/badge/ecosystem-jido.run-0ea5e9.svg)](https://jido.run/ecosystem)
+[![Discord](https://img.shields.io/badge/discord-join-5865F2.svg?logo=discord&logoColor=white)](https://jido.run/discord)
 
 Bridge between [Runic's](https://github.com/zblanco/runic) DAG-based workflow engine and [Jido's](https://github.com/agentjido/jido) signal-driven agent framework.
 
