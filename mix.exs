@@ -1,7 +1,7 @@
 defmodule JidoRunic.MixProject do
   use Mix.Project
 
-  @version "0.1.0"
+  @version "1.0.0"
   @source_url "https://github.com/agentjido/jido_runic"
   @description "Runic workflow integration for the Jido ecosystem"
 
@@ -64,15 +64,15 @@ defmodule JidoRunic.MixProject do
   defp deps do
     [
       # Jido ecosystem
-      {:jido, "~> 2.1"},
-      {:jido_ai, "~> 2.1.0", only: [:dev, :test]},
+      {:jido, "~> 2.3"},
+      {:jido_ai, "~> 2.2", only: [:dev, :test]},
 
       # Runic - DAG workflow composition
       {:runic, "~> 0.1.0-alpha.4"},
       {:multigraph, "~> 0.16.1-mg.1"},
 
       # Runtime deps
-      {:zoi, "~> 0.16"},
+      {:zoi, "~> 0.18"},
 
       # Dev/Test
       {:credo, "~> 1.7.17", only: [:dev, :test], runtime: false},
