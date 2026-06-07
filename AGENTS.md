@@ -26,4 +26,5 @@
 
 ## Git Commit Guidelines
 - Use conventional commit format: `type(scope): description`
+- Do not modify `CHANGELOG.md`; release notes are generated from Git history during release, so keep changes focused on proper Conventional Commits.
 - Types: feat, fix, docs, style, refactor, test, chore, ci
