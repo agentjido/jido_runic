@@ -23,8 +23,8 @@ defmodule Jido.Runic.SignalFact do
     Fact.new(value: data, ancestry: ancestry)
   end
 
-  def from_signal(signal, opts) when is_map(signal) do
-    data = Map.get(signal, :data, signal)
+  def from_signal(%{} = signal, opts) do
+    data = signal
     ancestry = build_ancestry(signal, opts)
     Fact.new(value: data, ancestry: ancestry)
   end
