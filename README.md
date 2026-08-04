@@ -1,4 +1,4 @@
-# JidoRunic
+# Jido.Runic
 
 [![Hex.pm](https://img.shields.io/hexpm/v/jido_runic.svg)](https://hex.pm/packages/jido_runic)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/jido_runic/)
@@ -45,7 +45,7 @@ defmodule MyApp.Greet do
 end
 
 # Wrap the action as a workflow node
-node = JidoRunic.ActionNode.new(MyApp.Greet, %{}, name: :greet)
+node = Jido.Runic.ActionNode.new(MyApp.Greet, %{}, name: :greet)
 
 # Build a single-step workflow and run it
 alias Runic.Workflow
@@ -61,29 +61,29 @@ Workflow.raw_productions(result)
 
 ## Core Concepts
 
-### `JidoRunic.ActionNode`
+### `Jido.Runic.ActionNode`
 
 Wraps a Jido Action module as a Runic workflow node. The action's schema is introspected to derive inputs; execution delegates to `Jido.Exec.run/2`. Implements Runic's `Invokable`, `Component`, and `Transmutable` protocols.
 
 ```elixir
-node = JidoRunic.ActionNode.new(MyApp.SomeAction, %{static: "param"}, name: :my_step)
+node = Jido.Runic.ActionNode.new(MyApp.SomeAction, %{static: "param"}, name: :my_step)
 ```
 
-### `JidoRunic.SignalFact`
+### `Jido.Runic.SignalFact`
 
 Bidirectional adapter between Jido Signals and Runic Facts. Maps Jido's causality tracking (`signal.source`, `signal.jidocause`) to Runic's fact ancestry chain.
 
 ```elixir
-fact = JidoRunic.SignalFact.from_signal(signal)
-signal = JidoRunic.SignalFact.to_signal(fact, type: "my.event", source: "/my/source")
+fact = Jido.Runic.SignalFact.from_signal(signal)
+signal = Jido.Runic.SignalFact.to_signal(fact, type: "my.event", source: "/my/source")
 ```
 
-### `JidoRunic.SignalMatch`
+### `Jido.Runic.SignalMatch`
 
 A Runic match node that gates downstream execution based on Jido signal type prefix patterns. Only facts whose `:type` field matches the pattern pass through.
 
 ```elixir
-gate = JidoRunic.SignalMatch.new("user.created")
+gate = Jido.Runic.SignalMatch.new("user.created")
 
 workflow =
   Workflow.new(:gated)
@@ -91,7 +91,7 @@ workflow =
   |> Workflow.add(action_node, to: gate)
 ```
 
-### `JidoRunic.Strategy`
+### `Jido.Runic.Strategy`
 
 A `Jido.Agent.Strategy` implementation powered by a Runic DAG. Incoming signals are converted to facts and fed into the workflow. Runnables are emitted as `ExecuteRunnable` directives. Completed runnables are applied back, advancing the workflow until satisfied.
 
@@ -101,35 +101,35 @@ A `Jido.Agent.Strategy` implementation powered by a Runic DAG. Incoming signals 
 - Action nodes default to `timeout: 0` (inline) so Runic owns concurrency/time budgeting; override per node if you want Task-based timeouts.
 - To delegate work, set `executor: {:child, tag}` on an ActionNode and configure `child_modules: %{tag => MyChildAgent}` in strategy opts. Missing child modules emit a `runic.child.missing` signal for observability.
 
-### `JidoRunic.Directive.ExecuteRunnable`
+### `Jido.Runic.Directive.ExecuteRunnable`
 
 A Jido directive that schedules execution of a Runic `Runnable`. The runtime interprets this by running the runnable and sending the result back as a completion signal.
 
-### `JidoRunic.Introspection`
+### `Jido.Runic.Introspection`
 
 Provenance queries and execution summaries. Walk fact ancestry chains or generate statistics about a workflow's execution state.
 
 ```elixir
-{:ok, chain} = JidoRunic.Introspection.provenance_chain(workflow, fact_hash)
-summary = JidoRunic.Introspection.execution_summary(workflow)
+{:ok, chain} = Jido.Runic.Introspection.provenance_chain(workflow, fact_hash)
+summary = Jido.Runic.Introspection.execution_summary(workflow)
 # => %{total_nodes: 3, facts_produced: 5, satisfied: true, productions: 1}
 ```
 
 ## Strategy-Driven Workflows
 
-Use `JidoRunic.Strategy` to drive a Runic DAG through Jido's agent loop:
+Use `Jido.Runic.Strategy` to drive a Runic DAG through Jido's agent loop:
 
 ```elixir
 defmodule MyApp.WorkflowAgent do
   use Jido.Agent,
     name: "workflow_agent",
-    strategy: JidoRunic.Strategy,
+    strategy: Jido.Runic.Strategy,
     schema: []
 end
 
 # Build a multi-step DAG
-plan = JidoRunic.ActionNode.new(MyApp.PlanAction, %{}, name: :plan)
-execute = JidoRunic.ActionNode.new(MyApp.ExecuteAction, %{}, name: :execute)
+plan = Jido.Runic.ActionNode.new(MyApp.PlanAction, %{}, name: :plan)
+execute = Jido.Runic.ActionNode.new(MyApp.ExecuteAction, %{}, name: :execute)
 
 workflow =
   Runic.Workflow.new(:pipeline)
@@ -140,17 +140,17 @@ workflow =
 agent = MyApp.WorkflowAgent.new()
 ctx = %{strategy_opts: []}
 
-{agent, []} = JidoRunic.Strategy.cmd(agent,
+{agent, []} = Jido.Runic.Strategy.cmd(agent,
   [%Jido.Instruction{action: :runic_set_workflow, params: %{workflow: workflow}}], ctx)
 
 # Feed input — returns ExecuteRunnable directives
-{agent, directives} = JidoRunic.Strategy.cmd(agent,
+{agent, directives} = Jido.Runic.Strategy.cmd(agent,
   [%Jido.Instruction{action: :runic_feed_signal, params: %{data: %{topic: "Elixir"}}}], ctx)
 
 # Execute runnables and apply results until satisfied
-Enum.reduce(directives, agent, fn %JidoRunic.Directive.ExecuteRunnable{} = d, agent ->
-  runnable = JidoRunic.Strategy.execute_runnable(d)
-  {agent, _dirs} = JidoRunic.Strategy.cmd(agent,
+Enum.reduce(directives, agent, fn %Jido.Runic.Directive.ExecuteRunnable{} = d, agent ->
+  runnable = Jido.Runic.Strategy.execute_runnable(d)
+  {agent, _dirs} = Jido.Runic.Strategy.cmd(agent,
     [%Jido.Instruction{action: :runic_apply_result, params: %{runnable: runnable}}], ctx)
   agent
 end)
@@ -176,7 +176,7 @@ Runic Fact   ──→  SignalFact.to_signal/2    ──→  Jido Signal
 Jido Action  ──→  ActionNode.new/3          ──→  Runic Workflow Node
 
 ┌─────────────────────────────────────────────────────────────┐
-│                    JidoRunic.Strategy                        │
+│                    Jido.Runic.Strategy                        │
 │                                                             │
 │  Signal in ──→ SignalFact.from_signal ──→ Workflow.plan_eagerly
 │                                                │            │
