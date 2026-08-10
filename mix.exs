@@ -1,7 +1,7 @@
 defmodule JidoRunic.MixProject do
   use Mix.Project
 
-  @version "1.0.0"
+  @version "1.0.1"
   @source_url "https://github.com/agentjido/jido_runic"
   @description "Runic workflow integration for the Jido ecosystem"
 
