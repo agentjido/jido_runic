@@ -11,7 +11,7 @@ defmodule Jido.RunicTest.SignalFact do
 
       assert %Fact{} = fact
       assert fact.value == %{foo: "bar"}
-      assert is_integer(fact.hash)
+      assert %Runic.Identity{} = fact.hash
     end
 
     test "uses full map as data when :data key is absent" do

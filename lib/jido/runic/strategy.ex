@@ -6,6 +6,10 @@ defmodule Jido.Runic.Strategy do
   Runnables are emitted as ExecuteRunnable directives for the runtime.
   Completed runnables are applied back, advancing the workflow until quiescence.
 
+  Failed runnables produce error facts with a plain error map from
+  `Jido.Action.Error.to_map/1`. The map contains `:type`, `:message`,
+  `:details`, and `:retryable?`. Step history keeps the original error.
+
   ## Status Lifecycle
 
       :idle → :running → :waiting → :paused → :success / :failure
@@ -403,7 +407,7 @@ defmodule Jido.Runic.Strategy do
       if runnable.status == :failed do
         error_fact =
           Fact.new(
-            value: %{error: runnable.error, node: runnable.node.name, status: :failed},
+            value: %{error: Jido.Action.Error.to_map(runnable.error), node: runnable.node.name, status: :failed},
             ancestry: {runnable.node.hash, runnable.input_fact.hash}
           )
 

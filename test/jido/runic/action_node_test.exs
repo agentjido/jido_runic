@@ -72,7 +72,7 @@ defmodule Jido.Runic.ActionNodeTest do
       assert node.name == :add
       assert node.action_mod == Add
       assert node.params == %{}
-      assert is_integer(node.hash)
+      assert %Runic.Identity{} = node.hash
     end
 
     test "accepts custom name" do

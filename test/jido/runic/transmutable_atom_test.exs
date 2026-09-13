@@ -1,5 +1,6 @@
 defmodule Jido.Runic.TransmutableAtomTest do
-  use ExUnit.Case, async: true
+  # The unloaded-module test changes VM-wide code state for the shared Add action.
+  use ExUnit.Case, async: false
 
   alias Jido.Runic.ActionNode
   alias Runic.Workflow
@@ -120,10 +121,11 @@ defmodule Jido.Runic.TransmutableAtomTest do
 
   describe "beam_exports_action_metadata? via unloaded module" do
     test "recognizes an action module after purging and deleting it" do
-      assert :code.is_loaded(Add) != false
+      assert {:module, Add} = Code.ensure_loaded(Add)
 
       :code.purge(Add)
       :code.delete(Add)
+      assert :code.is_loaded(Add) == false
 
       try do
         node = Runic.Transmutable.to_component(Add)
