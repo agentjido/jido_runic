@@ -46,7 +46,7 @@ defmodule Jido.Runic.ActionNode do
 
   @type t :: %__MODULE__{
           name: atom(),
-          hash: integer(),
+          hash: Runic.Identity.t(),
           action_mod: module(),
           params: map(),
           context: map(),

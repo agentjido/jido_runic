@@ -17,7 +17,7 @@ defmodule Jido.Runic.Directive.ExecuteRunnable do
   @type target :: :local | {:child, atom()} | {:pid, pid()}
 
   @type t :: %__MODULE__{
-          runnable_id: integer(),
+          runnable_id: term(),
           runnable: Runic.Workflow.Runnable.t(),
           target: target()
         }

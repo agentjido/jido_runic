@@ -56,7 +56,7 @@ defmodule Jido.RunicTest.Introspection do
 
         {tail_fact, producer_hash} = List.last(chain)
         assert tail_fact.hash == produced.hash
-        assert is_integer(producer_hash)
+        assert %Runic.Identity{} = producer_hash
       end
     end
 
@@ -166,7 +166,7 @@ defmodule Jido.RunicTest.Introspection do
       info = map[:add]
       assert info.type == :action_node
       assert info.action_mod == Add
-      assert is_integer(info.hash)
+      assert %Runic.Identity{} = info.hash
     end
 
     test "returns nil action_mod for non-ActionNode" do

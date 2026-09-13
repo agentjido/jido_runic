@@ -68,7 +68,7 @@ defmodule JidoRunic.MixProject do
       {:jido_ai, "~> 2.2", only: [:dev, :test]},
 
       # Runic - DAG workflow composition
-      {:runic, "~> 0.1.0-alpha.4"},
+      {:runic, "~> 0.1.0-alpha.10"},
       {:multigraph, "~> 0.16.1-mg.1"},
 
       # Runtime deps

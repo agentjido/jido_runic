@@ -294,6 +294,35 @@ defmodule Jido.Runic.StrategyTest do
       # No fallback branches, so workflow quiesces with no productions → :failure
       assert strat.status == :failure
       assert strat.pending == %{}
+
+      error_fact = Enum.find(Workflow.facts(strat.workflow), &match?(%{status: :failed}, &1.value))
+      assert error_fact.value.error == Jido.Action.Error.to_map(executed.error)
+      assert error_fact.ancestry == {executed.node.hash, executed.input_fact.hash}
+      assert %Runic.Identity{domain: :fact_occurrence} = error_fact.hash
+    end
+
+    test "error facts support nested exceptions and process-local error details" do
+      agent = make_agent(failing_workflow())
+      {agent, [directive]} = feed(agent, %{reason: "boom"})
+
+      error =
+        Jido.Action.Error.execution_error("boom", %{
+          cause: %RuntimeError{message: "nested"},
+          caller: self(),
+          reference: make_ref()
+        })
+
+      executed = %{execute_directive(directive) | error: error}
+      {agent, _directives} = apply_result(agent, executed)
+      strat = get_strat(agent)
+      error_fact = Enum.find(Workflow.facts(strat.workflow), &match?(%{status: :failed}, &1.value))
+
+      assert strat.status == :failure
+      assert %{type: :execution_error, message: "boom", details: details} = error_fact.value.error
+      assert details.cause.message == "nested"
+      assert is_binary(details.caller)
+      assert is_binary(details.reference)
+      assert error_fact.payload_digest == Runic.Workflow.Fact.new(value: error_fact.value).payload_digest
     end
 
     test "failed runnable is removed from pending" do
@@ -459,7 +488,7 @@ defmodule Jido.Runic.StrategyTest do
       {_agent, [directive]} = feed(agent, %{value: 5})
 
       assert %ExecuteRunnable{} = directive
-      assert is_integer(directive.runnable_id)
+      assert %Runic.Identity{} = directive.runnable_id
       assert directive.runnable.status == :pending
       assert directive.target == :local
     end

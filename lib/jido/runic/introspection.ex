@@ -11,10 +11,10 @@ defmodule Jido.Runic.Introspection do
   alias Runic.Workflow.Fact
 
   @type fact_source :: %Workflow{} | %{facts: [Fact.t()]}
-  @type provenance_entry :: {Fact.t(), integer() | nil}
+  @type provenance_entry :: {Fact.t(), Fact.hash() | nil}
 
   @type node_info :: %{
-          hash: integer(),
+          hash: Fact.hash(),
           inputs: keyword(),
           outputs: keyword(),
           type: atom(),
@@ -23,13 +23,13 @@ defmodule Jido.Runic.Introspection do
 
   @type graph_node :: %{
           name: atom(),
-          hash: integer(),
+          hash: Fact.hash(),
           type: atom()
         }
 
   @type graph_edge :: %{
-          from: integer(),
-          to: integer(),
+          from: Fact.hash(),
+          to: Fact.hash(),
           label: atom()
         }
 
