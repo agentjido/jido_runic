@@ -64,15 +64,20 @@ defmodule JidoRunic.MixProject do
   defp deps do
     [
       # Jido ecosystem
-      {:jido, "~> 2.3"},
-      {:jido_ai, "~> 2.2", only: [:dev, :test]},
+      {:jido,
+       git: "https://github.com/agentjido/jido.git", ref: "0c8853bf451a40330b7192c9d2200a06f9c61261", override: true},
+      {:jido_ai,
+       git: "https://github.com/agentjido/jido_ai.git",
+       ref: "9558c18a31380c00d0694ea5c747dd40ac50ead9",
+       override: true,
+       only: [:dev, :test]},
 
       # Runic - DAG workflow composition
       {:runic, "~> 0.1.0-alpha.10"},
       {:multigraph, "~> 0.16.1-mg.1"},
 
       # Runtime deps
-      {:zoi, "~> 0.18"},
+      {:zoi, "~> 0.18.11"},
 
       # Dev/Test
       {:credo, "~> 1.7.17", only: [:dev, :test], runtime: false},
