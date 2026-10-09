@@ -65,10 +65,7 @@ defmodule JidoRunic.MixProject do
     [
       # Jido ecosystem
       {:jido, "~> 2.4"},
-      {:jido_ai,
-       git: "https://github.com/agentjido/jido_ai.git",
-       ref: "f24ffdc701c48a2c6894c95e7cb550b25a68ce9e",
-       only: [:dev, :test]},
+      {:jido_ai, "~> 2.4", only: [:dev, :test]},
 
       # Runic - DAG workflow composition
       {:runic, "~> 0.1.0-alpha.10"},
