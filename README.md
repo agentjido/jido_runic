@@ -191,6 +191,10 @@ Jido Action  ──→  ActionNode.new/3          ──→  Runic Workflow Node
 └─────────────────────────────────────────────────────────────┘
 ```
 
+## Local Documentation
+
+Run `mix docs` to generate HTML and Markdown documentation in `doc/`, including Markdown pages and `llms.txt`.
+
 ## License
 
 Apache License 2.0 — See [LICENSE](https://github.com/agentjido/jido_runic/blob/main/LICENSE) for details.
