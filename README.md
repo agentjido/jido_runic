@@ -1,5 +1,10 @@
 # Jido.Runic
 
+> [!IMPORTANT]
+> **`jido_runic` is planned for deprecation.** [Jido v3](https://github.com/agentjido/jido) includes Runic-based Flow execution.
+>
+> Use the [v2-to-v3 migration guide](https://github.com/agentjido/jido/blob/main/guides/reference/v2-to-v3-migration.md) to check how your workflow maps to the v3 Flow API.
+
 [![Hex.pm](https://img.shields.io/hexpm/v/jido_runic.svg)](https://hex.pm/packages/jido_runic)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/jido_runic/)
 [![CI](https://github.com/agentjido/jido_runic/actions/workflows/ci.yml/badge.svg)](https://github.com/agentjido/jido_runic/actions/workflows/ci.yml)
